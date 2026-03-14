@@ -10,6 +10,22 @@ This repository contains agent skills for investigation, planning, and specifica
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references.
 
+## Installation
+
+Install all skills into `~/.agents/skills` from the repository root:
+
+```bash
+./install.sh
+```
+
+Use a custom destination if needed:
+
+```bash
+./install.sh /path/to/destination
+```
+
+The script detects each top-level directory that contains a `SKILL.md` and syncs it with `rsync`, excluding `.git/` and `.DS_Store`.
+
 ## Skills
 
 ### Investigator
