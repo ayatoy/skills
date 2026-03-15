@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reviewer"
+  short_description: "Run a two-pass code review for bugs, risks, and questions"
+  default_prompt: "Use $reviewer to review the current changes, or a feature or code area, in two passes: first find concrete issues, then check intent, security, regression risk, tests, operations, and AI readability."

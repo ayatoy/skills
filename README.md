@@ -7,6 +7,7 @@ This repository is my collection of agent skills.
 - `investigator`: skill for repository research and technical analysis
 - `planner`: skill for creating and managing ExecPlans
 - `pathfinder`: skill for turning changes or code areas into a prioritized human reading path
+- `reviewer`: skill for two-pass review of changes or existing code, combining strict issue finding with broader contextual checks
 - `specifier`: skill for organizing software requirements and specifications
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references.
@@ -52,6 +53,13 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: staged or unstaged changes, commit review, commit range review, PR review, feature reading, subsystem reading
 - Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints
+
+### Reviewer
+
+`reviewer` supports both change review and existing code review.
+
+- Use cases: staged or unstaged review, commit review, branch review, PR review, feature review, file review, directory review
+- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability
 
 ### Specifier
 
