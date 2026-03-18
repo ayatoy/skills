@@ -5,6 +5,7 @@ This repository is my collection of agent skills.
 ## Overview
 
 - `investigator`: skill for repository research and technical analysis
+- `resolver`: skill for appending best-effort inferred answers to open questions in documents and free-form text
 - `planner`: skill for creating and managing ExecPlans
 - `pathfinder`: skill for turning changes or code areas into a prioritized human reading path
 - `reviewer`: skill for two-pass review of changes or existing code, combining strict issue finding with broader contextual checks
@@ -36,6 +37,13 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: technical research, deep dives, root-cause analysis, background study
 - Role: turns findings into structured investigation reports
+
+### Resolver
+
+`resolver` is focused on resolving open questions with explicit, best-effort inference.
+
+- Use cases: augmenting investigation notes, review outputs, specifications, and arbitrary text that still contains unresolved questions
+- Role: preserves the original questions and appends labeled inferred answers with confidence and basis
 
 ### Planner
 
