@@ -24,8 +24,9 @@ Create a detailed markdown research report for a user-provided topic and save it
 1. Determine scope from the topic text.
 2. Investigate local repository evidence first.
 3. Add external evidence when local data is insufficient or when recency matters.
-4. Synthesize findings into a structured report.
-5. Save the report file to `$PWD/docs/notes/` and cite all sources.
+4. Use all available relevant resources as needed and investigate thoroughly instead of stopping at the first plausible explanation.
+5. Synthesize findings into a structured report.
+6. Save the report file to `$PWD/docs/notes/` and cite all sources.
 
 ## Guardrail
 
@@ -39,6 +40,7 @@ This prints the final path and creates a draft markdown file if it does not exis
 ## Local Investigation Checklist
 
 - Search broadly with `rg` for topic terms and synonyms.
+- Expand outward from the obvious entry points and inspect adjacent modules, callers, configs, tests, and historical notes when they may change the conclusion.
 - Read relevant code, tests, configs, docs, issues, and notes.
 - Capture concrete evidence:
   - file paths
@@ -48,6 +50,7 @@ This prints the final path and creates a draft markdown file if it does not exis
 ## External Investigation Checklist
 
 - Use web research for unstable or time-sensitive facts.
+- When the repository alone does not settle the question, use the web and any other available primary sources needed to close the gap responsibly.
 - Prefer primary sources.
 - Record source URLs in the report.
 - Distinguish facts from inferences.

@@ -49,8 +49,9 @@ This skill works especially well after `investigator`, `reviewer`, or `specifier
 2. Group duplicates or near-duplicates so the same issue is answered once.
 3. Gather evidence in this order:
    - the surrounding text
-   - related local repository context
-   - external sources only when the question depends on unstable or missing local facts
+   - related local repository context, including the wider repository when needed
+   - external sources, including the web, when the question depends on unstable or missing local facts
+   - investigate thoroughly and use all available resources needed to support the inference instead of stopping at the nearest plausible clue
 4. Infer the single best answer that is still defensible from the evidence.
 5. Append the answer next to the question with confidence and basis.
 6. Leave a question unanswered only when the evidence is too weak to support a responsible inference.
