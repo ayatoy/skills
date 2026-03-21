@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recapper"
+  short_description: "Summarize the current session into $PWD/docs/notes and analyze repeated work patterns"
+  default_prompt: "Use $recapper to summarize the current session so far into a detailed note under $PWD/docs/notes with a yyyy-MM-dd filename prefix, and append an analysis of repeated work patterns observed in the session."

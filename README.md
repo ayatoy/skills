@@ -10,6 +10,7 @@ This repository is my collection of agent skills.
 - `pathfinder`: skill for turning changes or code areas into a prioritized human reading path
 - `reviewer`: skill for two-pass review of changes or existing code, combining strict issue finding with broader contextual checks
 - `specifier`: skill for organizing software requirements and specifications
+- `recapper`: skill for saving a detailed recap of the current session and analyzing repeated work patterns
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references.
 
@@ -75,6 +76,13 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: requirement definition, spec drafting, assumption and constraint management
 - Role: converts requests or research into implementation-ready specifications
+
+### Recapper
+
+`recapper` is focused on preserving the current session as a detailed handoff note.
+
+- Use cases: session recap, handoff note creation, full conversation summary, workflow repetition analysis
+- Role: reconstructs the session chronologically, records concrete actions and outcomes, and appends repeated work pattern analysis
 
 ## License
 
