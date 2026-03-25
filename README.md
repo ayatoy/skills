@@ -50,8 +50,9 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 `planner` supports the creation and management of ExecPlans.
 
-- Use cases: complex features, significant refactors, execution planning
-- Role: structures implementation work before execution starts
+- Use cases: complex features, significant refactors, execution planning, plan execution from an existing ExecPlan
+- Role: accepts free-form requests, upstream research/specification documents, or an existing ExecPlan, then creates, updates, or executes the target plan without jumping straight into implementation
+- Execution model: `Execute the plan` is the only trigger phrase and targets the latest plan implicitly; providing a planner-generated plan file targets that specific plan explicitly
 - References:
   - [OpenAI Cookbook](https://cookbook.openai.com/articles/codex_exec_plans)
   - [YouTube](https://www.youtube.com/watch?v=Gr41tYOzE20)

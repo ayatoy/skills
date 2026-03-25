@@ -1,4 +1,4 @@
 interface:
   display_name: "Planner"
-  short_description: "Create and manage ExecPlans and save them to $PWD/docs/plans"
-  default_prompt: "Use $planner to create or update an ExecPlan for this repository following references/PLANS.md, and save it under $PWD/docs/plans with a yyyy-MM-dd filename prefix."
+  short_description: "Create, revise, and execute ExecPlans in $PWD/docs/plans"
+  default_prompt: "Use $planner to create, update, or execute an ExecPlan for this repository following references/PLANS.md. Accept free-form requests, investigator/specifier documents, or an existing ExecPlan, and keep plan files under $PWD/docs/plans with a yyyy-MM-dd filename prefix."
