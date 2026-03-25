@@ -21,5 +21,5 @@ Do not include local paths or other environment-specific information in plan fil
 ## Authorize plan execution
 
 Only execute a created ExecPlan when the user explicitly instructs you to execute it. Treat execution as authorized only if the user uses an approved trigger phrase.
-Approved trigger phrases are case-insensitive and may omit “the” (e.g., “Do the plan”, “Do plan”, “Execute the plan”, “Execute plan”).
-Do not execute the plan in response to vague approvals (e.g., “OK,” “Sounds good,” “Go ahead”) unless they contain an approved trigger phrase.
+The only approved trigger phrase is `Execute the plan` (case-insensitive).
+Do not execute the plan in response to vague approvals (e.g., “OK,” “Sounds good,” “Go ahead”) or alternative phrasings unless they include that exact trigger phrase.
