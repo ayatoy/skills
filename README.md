@@ -64,6 +64,7 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: staged or unstaged changes, commit review, commit range review, PR review, feature reading, subsystem reading
 - Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints, then saves it as a markdown note under `$PWD/docs/notes`
+- Artifact links: use repo-local relative Markdown links so VSCode users can click from the note into source files and directories
 
 ### Reviewer
 
@@ -71,6 +72,7 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: staged or unstaged review, commit review, branch review, PR review, feature review, file review, directory review
 - Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, and saves the review as a markdown note under `$PWD/docs/notes`
+- Artifact links: use repo-local relative Markdown links so VSCode users can click from the note into source files and directories
 
 ### Specifier
 

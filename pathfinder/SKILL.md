@@ -76,6 +76,9 @@ Always produce a concise guide with these sections:
 
 Add `Key concepts` when the task is primarily code reading.
 Add `Optional diagram` only when a small Mermaid diagram will reduce cognitive load.
+When referencing source files, tests, configs, docs, or directories in the saved note, use repo-local relative Markdown links from the note file so a human can click them in VSCode.
+Prefer plain file or directory links such as `[src/app/router.ts](../../src/app/router.ts)` over environment-specific URIs or absolute paths.
+If line precision matters, keep the link target as the file and put the line number in visible text such as `[src/app/router.ts](../../src/app/router.ts) line 42`.
 
 Save the guide as markdown and keep the saved note as the canonical artifact for this run.
 
@@ -83,7 +86,9 @@ Save the guide as markdown and keep the saved note as the canonical artifact for
 
 - Create the destination directory if needed.
 - Save the reading path under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
-- Do not include local absolute paths or other environment-specific details in the saved note; use placeholders such as `$PWD` when needed.
+- Do not include local absolute paths, `file://` URLs, `vscode://` URIs, or other machine-specific details in the saved note.
+- Use repo-local relative Markdown links from the saved note to any referenced source, test, doc, config, or directory.
+- Prefer link labels that match the repository path the reader expects to open.
 - When generating a second path for the same target, prefer a new note unless the user explicitly asks to update an existing one.
 
 ## Standard Workflow
@@ -171,6 +176,7 @@ Keep the path short. Usually 3 to 7 steps is enough.
 Each step should include:
 
 - `Scope`: the file group, component, or flow to inspect
+- `Links`: one or more repo-local relative Markdown links for the concrete files or directories to open
 - `Check`: what the reader should verify or learn
 - `Why now`: why this step unlocks the rest
 - `Exit signal`: what gives enough confidence to move on

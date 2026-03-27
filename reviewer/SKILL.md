@@ -133,6 +133,10 @@ Prefer this structure:
 4. `Change summary` only if it helps orient the reader
 
 State the exact mode and target near the top of the saved note.
+When referencing source files, tests, configs, docs, or directories in the saved note, use repo-local relative Markdown links from the note file so a human can click them in VSCode.
+Prefer plain file or directory links such as `[src/api/server.ts](../../src/api/server.ts)` over environment-specific URIs or absolute paths.
+If line precision matters, keep the link target as the file and put the line number in visible text such as `[src/api/server.ts](../../src/api/server.ts) line 42`.
+Each finding, risk, or open question that points at code should cite the smallest useful location with a clickable Markdown link.
 If the environment or caller also requires a specific review format such as JSON or inline comments, produce that format as needed, but still persist the main markdown review note unless the user explicitly asks not to save a file.
 
 If there are no actionable findings, say so explicitly and mention any remaining testing gaps or uncertainty.
@@ -141,7 +145,9 @@ If there are no actionable findings, say so explicitly and mention any remaining
 
 - Create the destination directory if needed.
 - Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
-- Do not include local absolute paths or other environment-specific details in the saved note; use placeholders such as `$PWD` when needed.
+- Do not include local absolute paths, `file://` URLs, `vscode://` URIs, or other machine-specific details in the saved note.
+- Use repo-local relative Markdown links from the saved note to any referenced source, test, doc, config, or directory.
+- Prefer link labels that match the repository path the reader expects to open.
 - When reviewing the same target again later in the session, prefer creating a new note unless the user explicitly asks to overwrite a prior one.
 
 ## Pass 1 Rules For `change-review`
