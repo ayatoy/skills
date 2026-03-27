@@ -1,13 +1,13 @@
 ---
 name: supervisor
-description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Always start with `investigator`, then optionally run `resolver` and `specifier`, use `planner` to create and execute an ExecPlan, run `reviewer` and `pathfinder` on the result, and finish with `recapper`. Prefer running each phase in a subagent while DEM stays in the main thread as the supervisor.
+description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Always start with `investigator`, then optionally run `resolver` and `specifier`, use `planner` to create and execute an ExecPlan, run `reviewer` and `pathfinder` on the result, and finish with `recapper`. Prefer running each phase in a subagent while the AI assistant stays in the main thread as the supervisor.
 ---
 
 # Workflow Supervisor
 
 Supervise a full repository workstream from investigation through implementation review and session recap.
 
-Keep DEM in the main thread as the orchestrator.
+Keep the AI assistant in the main thread as the orchestrator.
 Use a separate subagent for each work phase whenever subagents are available.
 
 ## Inputs
@@ -53,7 +53,7 @@ Infer the starting phase from the strongest artifact the user provides.
 
 ## Supervisor Responsibilities
 
-DEM in the main thread is responsible for:
+The AI assistant in the main thread is responsible for:
 
 - deciding the current phase
 - spawning and coordinating subagents
@@ -188,7 +188,7 @@ Run `recapper` after the major work is complete unless the user asked to skip it
 
 - If a phase fails because the prompt was too broad, rerun once with tighter scope.
 - If a phase fails because a required artifact is missing, inspect the workspace, recover the latest relevant artifact if possible, and continue.
-- If a phase is blocked by a real ambiguity that DEM cannot responsibly infer, stop and ask the user one concise question.
+- If a phase is blocked by a real ambiguity that the AI assistant cannot responsibly infer, stop and ask the user one concise question.
 - Do not silently skip `investigator`, `planner`, or implementation review.
 
 ## Guardrails

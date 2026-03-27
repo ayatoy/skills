@@ -55,7 +55,7 @@ Create a detailed markdown note that captures the current session so far and sav
 ## What To Capture
 
 - User goals, constraints, and changes in direction
-- DEM's key decisions and why they were made
+- The AI assistant's key decisions and why they were made
 - Investigations performed and what they established
 - Commands, edits, and validations that materially changed the work
 - Errors, blockers, dead ends, and how they were resolved
