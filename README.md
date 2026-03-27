@@ -11,6 +11,7 @@ This repository is my collection of agent skills.
 - `reviewer`: skill for two-pass review of changes or existing code, combining strict issue finding with broader contextual checks
 - `specifier`: skill for organizing software requirements and specifications
 - `recapper`: skill for saving a detailed recap of the current session and analyzing repeated work patterns
+- `supervisor`: skill for supervising the full workflow across the other skills from investigation through recap
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references.
 
@@ -62,14 +63,14 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 `pathfinder` supports efficient human review and code reading preparation.
 
 - Use cases: staged or unstaged changes, commit review, commit range review, PR review, feature reading, subsystem reading
-- Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints
+- Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints, then saves it as a markdown note under `$PWD/docs/notes`
 
 ### Reviewer
 
 `reviewer` supports both change review and existing code review.
 
 - Use cases: staged or unstaged review, commit review, branch review, PR review, feature review, file review, directory review
-- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability
+- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, and saves the review as a markdown note under `$PWD/docs/notes`
 
 ### Specifier
 
@@ -84,6 +85,13 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: session recap, handoff note creation, full conversation summary, workflow repetition analysis
 - Role: reconstructs the session chronologically, records concrete actions and outcomes, and appends repeated work pattern analysis
+
+### Supervisor
+
+`supervisor` is focused on orchestrating the full multi-skill workflow.
+
+- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap
+- Role: keeps the main thread as supervisor, delegates each phase to a subagent when available, and preserves the artifact chain across notes, specs, plans, reviews, and recap
 
 ## License
 

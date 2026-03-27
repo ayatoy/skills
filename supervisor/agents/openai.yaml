@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supervisor"
+  short_description: "Supervise the full workflow across investigator, resolver, specifier, planner, reviewer, pathfinder, and recapper"
+  default_prompt: "Use $supervisor to orchestrate this repository workflow end-to-end: start from investigator, optionally run resolver and specifier, create and execute an ExecPlan with planner, then run reviewer, pathfinder, and recapper. Use a separate subagent for each phase when available."

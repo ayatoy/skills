@@ -118,6 +118,11 @@ State the exact mode and target clearly in the review so the reader knows what i
 
 ## Output Contract
 
+Save exactly one main review note under:
+
+- `$PWD/docs/notes/yyyy-MM-dd_*.md`
+
+Use today's local date for `yyyy-MM-dd` unless the user requests another date.
 Write the review in the user's language unless asked otherwise.
 
 Prefer this structure:
@@ -127,9 +132,17 @@ Prefer this structure:
 3. `Residual risks`
 4. `Change summary` only if it helps orient the reader
 
-If the environment or caller requires a specific review format such as JSON or inline comments, keep that format and apply this skill's judgment rules instead of forcing the section layout above.
+State the exact mode and target near the top of the saved note.
+If the environment or caller also requires a specific review format such as JSON or inline comments, produce that format as needed, but still persist the main markdown review note unless the user explicitly asks not to save a file.
 
 If there are no actionable findings, say so explicitly and mention any remaining testing gaps or uncertainty.
+
+## File Creation And Management
+
+- Create the destination directory if needed.
+- Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
+- Do not include local absolute paths or other environment-specific details in the saved note; use placeholders such as `$PWD` when needed.
+- When reviewing the same target again later in the session, prefer creating a new note unless the user explicitly asks to overwrite a prior one.
 
 ## Pass 1 Rules For `change-review`
 

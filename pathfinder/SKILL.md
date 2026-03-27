@@ -57,6 +57,11 @@ Use these default inference rules:
 
 ## Output Contract
 
+Save exactly one main reading-path note under:
+
+- `$PWD/docs/notes/yyyy-MM-dd_*.md`
+
+Use today's local date for `yyyy-MM-dd` unless the user requests another date.
 Write the output in the user's language unless asked otherwise.
 
 Always produce a concise guide with these sections:
@@ -71,6 +76,15 @@ Always produce a concise guide with these sections:
 
 Add `Key concepts` when the task is primarily code reading.
 Add `Optional diagram` only when a small Mermaid diagram will reduce cognitive load.
+
+Save the guide as markdown and keep the saved note as the canonical artifact for this run.
+
+## File Creation And Management
+
+- Create the destination directory if needed.
+- Save the reading path under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
+- Do not include local absolute paths or other environment-specific details in the saved note; use placeholders such as `$PWD` when needed.
+- When generating a second path for the same target, prefer a new note unless the user explicitly asks to update an existing one.
 
 ## Standard Workflow
 

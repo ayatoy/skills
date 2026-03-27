@@ -1,4 +1,4 @@
 interface:
   display_name: "Pathfinder"
-  short_description: "Turn diffs or code areas into a prioritized reading path"
-  default_prompt: "Use $pathfinder to turn the current changes, a commit, a PR, or a code area into a concise human reading path with focus areas, watchpoints, and an optional Mermaid diagram."
+  short_description: "Turn diffs or code areas into a prioritized reading path and save it under $PWD/docs/notes"
+  default_prompt: "Use $pathfinder to turn the current changes, a commit, a PR, or a code area into a concise human reading path with focus areas, watchpoints, and an optional Mermaid diagram. Save the result as a markdown note under $PWD/docs/notes with a yyyy-MM-dd filename prefix."
