@@ -4,16 +4,9 @@ This repository is my collection of agent skills.
 
 ## Overview
 
-- `investigator`: skill for repository research and technical analysis
-- `resolver`: skill for appending best-effort inferred answers to open questions in documents and free-form text
-- `planner`: skill for creating and managing ExecPlans
-- `pathfinder`: skill for turning changes or code areas into a prioritized human reading path
-- `reviewer`: skill for two-pass review of changes or existing code, combining strict issue finding with broader contextual checks
-- `specifier`: skill for organizing software requirements and specifications
-- `recapper`: skill for saving a detailed recap of the current session and analyzing repeated work patterns
-- `supervisor`: skill for supervising the full workflow across the other skills from investigation through recap
+This repository contains a set of focused agent skills that can be used independently or combined into a larger workflow.
 
-Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references.
+Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references. See `Skill Relationships` for how the skills connect, and `Skills` for per-skill details.
 
 ## Skill Relationships
 
