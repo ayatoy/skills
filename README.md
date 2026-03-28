@@ -13,7 +13,7 @@ This repository contains a set of focused agent skills that can be used independ
 - `reviewer`: two-pass review of changes or existing code
 - `specifier`: software requirements and specification drafting
 - `recapper`: detailed session recap and repeated work pattern analysis
-- `supervisor`: orchestration across the full workflow from investigation through recap
+- `supervisor`: orchestration across the full workflow from investigation through recap, including resume and interrupt handling from existing workspace state
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references. See `Skill Relationships` for how the workflow connects, and `Skills` for per-skill details.
 
@@ -53,6 +53,7 @@ flowchart TB
 - `reviewer` runs first after implementation; if it finds blocking issues worth fixing immediately, the workflow loops through implementation and review again before `pathfinder` runs.
 - In one completed `supervisor` cycle, `pathfinder` and `recapper` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
 - `supervisor` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
+- When a prior run stopped halfway or the repository already contains manual edits, `supervisor` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
 - Notes are primarily emitted under `docs/notes/...`, specs under `docs/specs/...`, and ExecPlans under `docs/plans/...`.
 - `recapper` closes the workflow by summarizing the session, the work performed, and the artifacts produced.
 
@@ -134,8 +135,8 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 `supervisor` is focused on orchestrating the full multi-skill workflow.
 
-- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap
-- Role: keeps the main thread as supervisor, delegates each phase to a subagent when available, preserves the artifact chain across notes, specs, plans, reviews, and recap, loops through review and fix passes until blocking issues are resolved before running `pathfinder`, and guarantees exactly one `pathfinder` artifact and one `recapper` artifact at the end of each completed cycle
+- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap; also recovery of interrupted runs or manual in-flight work
+- Role: keeps the main thread as supervisor, delegates each phase to a subagent when available, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `pathfinder`, and guarantees exactly one `pathfinder` artifact and one `recapper` artifact at the end of each completed cycle
 
 ## License
 

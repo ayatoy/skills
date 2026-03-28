@@ -1,6 +1,6 @@
 ---
 name: supervisor
-description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Always start with `investigator`, then optionally run `resolver` and `specifier`, use `planner` to create and execute an ExecPlan, run a `reviewer`-driven fix loop until blocking issues are resolved, then run `pathfinder`, and finish with `recapper`. Prefer running each phase in a subagent while the AI assistant stays in the main thread as the supervisor.
+description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Usually start with `investigator`, then optionally run `resolver` and `specifier`, use `planner` to create and execute an ExecPlan, run a `reviewer`-driven fix loop until blocking issues are resolved, then run `pathfinder`, and finish with `recapper`. When the workspace already shows in-progress supervisor artifacts or repository changes, infer the current phase and resume or interrupt from there. Prefer running each phase in a subagent while the AI assistant stays in the main thread as the supervisor.
 ---
 
 # Workflow Supervisor
@@ -15,11 +15,13 @@ Use a separate subagent for each work phase whenever subagents are available.
 
 ## Inputs
 
+- No explicit input, in which case inspect the workspace and infer whether a supervisor cycle is already in progress
 - A free-form request describing a problem, goal, bug, feature, or investigation topic
 - Or an existing artifact path to resume from:
   - `$PWD/docs/notes/...`
   - `$PWD/docs/specs/...`
   - `$PWD/docs/plans/...`
+- Or an already-dirty repository state, including manual user edits, staged changes, or partially completed supervisor artifacts
 - Optional constraints:
   - stop after a named phase
   - resume from a named phase
@@ -39,11 +41,56 @@ Use a separate subagent for each work phase whenever subagents are available.
 9. `pathfinder`
 10. `recapper`
 
-## Resume Rules
+## Resume And Interrupt Rules
 
-Infer the starting phase from the strongest artifact the user provides.
+Infer the starting phase from the strongest available evidence, not only from the current prompt.
 
-- If the input is mainly a free-form request, start with `investigator`.
+Use this precedence order:
+
+1. explicit user override such as `resume from reviewer` or `stop after planner`
+2. strongest workspace evidence from the current repository state
+3. strongest artifact the user provides directly
+4. free-form request intent
+
+When there is no explicit input, or when the repository already has relevant uncommitted changes, inspect the workspace before defaulting to `investigator`.
+Treat pre-existing repository changes as a likely interrupted or manually advanced workflow and resume from the inferred current phase instead of restarting the pipeline from scratch.
+
+### Workspace State Inspection
+
+Inspect the repository for:
+
+- uncommitted changes in tracked or untracked files
+- the newest artifacts under `$PWD/docs/notes`, `$PWD/docs/specs`, and `$PWD/docs/plans`
+- whether the newest plan file looks created-only versus partially executed
+- whether a recent review note series exists
+- whether recent `pathfinder` or `recapper` notes already exist for the same workstream
+- whether the changed files are mostly workflow artifacts, implementation files, or both
+
+Use modification recency, artifact linkage, filenames, and content cues together.
+Do not rely on timestamps alone when filenames or note contents indicate a clearer ordering.
+
+### Dirty Repository Heuristic
+
+If the repository is dirty before the supervisor starts, assume one of these first:
+
+- an earlier supervisor run stopped after or during implementation
+- the user manually continued the work outside `supervisor`
+- the user is intentionally interrupting the normal flow with manual edits
+
+In those cases, prefer continuing from the furthest defensible phase already reached.
+
+- If code or test files changed and no review note exists yet, resume at `reviewer`.
+- If code or test files changed and the newest review note contains blocking findings that match the current diff, resume with a narrow implementation pass, then rerun `reviewer`.
+- If only workflow artifacts changed and the newest artifact is an investigation note, resume from `resolver`, `specifier`, or `planner` as appropriate.
+- If the newest artifact is a spec and there is no newer plan, resume at `planner` plan creation.
+- If the newest artifact is an ExecPlan and repository changes suggest implementation has not started, resume at `planner` execution.
+- If implementation changes and a clean post-review reading path already exist, resume at `recapper`.
+- If implementation changes exist but both a final `pathfinder` note and a final recap note already exist for the same workstream, treat that cycle as complete and do not automatically start a new one unless the user asks.
+
+Manual user edits are an interrupt, not noise.
+Preserve them, treat them as the latest implementation state, and route the workflow to the next missing supervisory phase.
+
+- If the input is mainly a free-form request and there is no stronger workspace evidence, start with `investigator`.
 - If the input is a note under `$PWD/docs/notes`, classify it before resuming:
   - treat it as an investigation note when it matches `investigator`-style sections such as `Topic and scope`, `Findings`, or `Open questions and risks`
   - treat it as a reviewer note when it matches `reviewer`-style sections such as `Findings`, `Open questions / assumptions`, or `Residual risks`
@@ -55,11 +102,30 @@ Infer the starting phase from the strongest artifact the user provides.
 - If the input is an ExecPlan under `$PWD/docs/plans`, start from `planner` execution.
 - If the user explicitly names a phase, respect that unless it would skip required upstream context.
 
+### Phase Inference Checklist
+
+Choose the next phase by finding the latest reliable completed milestone:
+
+1. If no relevant artifacts or changes exist, start with `investigator`.
+2. If an investigation artifact exists but no plan-driving artifact exists after it, continue with `resolver`, `specifier`, or `planner`.
+3. If a spec exists and no newer ExecPlan exists, continue with `planner` plan creation.
+4. If an ExecPlan exists but there is no evidence of implementation changes after it, continue with `planner` execution.
+5. If implementation changes exist but no review artifact exists after those changes, continue with `reviewer`.
+6. If a review artifact exists after the latest implementation changes:
+   - continue with a fix pass when the review has blocking findings
+   - otherwise continue with `pathfinder`
+7. If a `pathfinder` artifact exists after the final implementation and review state, continue with `recapper`.
+8. If a recap artifact exists after the final `pathfinder` artifact, treat the cycle as complete unless the user asks to extend it.
+
+When evidence conflicts, prefer the interpretation that preserves user work and requires the fewest repeated phases.
+If two interpretations are equally plausible and choosing the wrong one would risk overwriting or misreviewing user changes, ask one concise question.
+
 ## Supervisor Responsibilities
 
 The AI assistant in the main thread is responsible for:
 
 - deciding the current phase
+- inferring whether the workspace reflects a fresh request, a paused supervisor cycle, or a manual interrupt
 - spawning and coordinating subagents
 - passing the minimum necessary context to each phase
 - collecting artifact paths and key outcomes
@@ -67,6 +133,7 @@ The AI assistant in the main thread is responsible for:
 - deciding whether optional phases should run or be skipped
 - handling retries or fallbacks
 - ensuring implementation work that changes the repository is reflected back into the active ExecPlan
+- preserving user-created changes and incorporating them into the inferred workflow state instead of discarding them
 - giving the user a concise final summary
 
 The main thread should not duplicate the deep work already delegated to a subagent unless that delegation clearly failed.
@@ -190,7 +257,7 @@ Run `recapper` after `pathfinder` as the final phase of the completed supervisor
 
 ## Standard Orchestration Sequence
 
-1. Normalize the input and determine the starting phase.
+1. Normalize the input, inspect the workspace when needed, and determine whether this is a new run, a resume, or a manual interrupt.
 2. Spawn the phase subagent and wait for its main artifact or final result.
 3. Inspect the returned artifact path or summary, not the entire task from scratch.
 4. Decide the next phase:
@@ -213,12 +280,14 @@ Run `recapper` after `pathfinder` as the final phase of the completed supervisor
 
 - If a phase fails because the prompt was too broad, rerun once with tighter scope.
 - If a phase fails because a required artifact is missing, inspect the workspace, recover the latest relevant artifact if possible, and continue.
+- If the workspace shows strong evidence of a partially completed cycle, prefer resuming from that evidence over restarting earlier phases.
 - If a phase is blocked by a real ambiguity that the AI assistant cannot responsibly infer, stop and ask the user one concise question.
 - Do not silently skip `investigator`, `planner`, or implementation review.
 
 ## Guardrails
 
 - Do not jump straight into implementation from a free-form request; `investigator` is the default first step.
+- Do not restart from `investigator` when stronger workspace evidence shows the cycle already progressed further.
 - Do not force `resolver` or `specifier` when they add ceremony without improving decisions.
 - Do not run multiple implementation-capable subagents against overlapping write scopes at the same time.
 - Do not treat a planner-created plan as executed until the second `planner` run finishes.
@@ -232,6 +301,7 @@ Run `recapper` after `pathfinder` as the final phase of the completed supervisor
 ## Quality Bar
 
 - The workflow should feel like a supervised pipeline, not a loose checklist.
+- Resume and interrupt decisions should be conservative, artifact-aware, and biased toward preserving already completed work.
 - Each downstream phase should consume concrete upstream artifacts whenever possible.
 - Optional phases should be skipped deliberately, not forgotten.
 - The final summary should let the user see what happened, what was created, and what still needs attention.
