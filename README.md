@@ -13,6 +13,7 @@ This repository contains a set of focused agent skills that can be used independ
 - `reviewer`: two-pass review of changes or existing code
 - `specifier`: software requirements and specification drafting
 - `recapper`: detailed session recap and repeated work pattern analysis
+- `brainstormer`: free-form ideation backed by a living inbox note under `docs/inbox`
 - `supervisor`: orchestration across the full workflow from investigation through recap, including resume and interrupt handling from existing workspace state
 
 Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references. See `Skill Relationships` for how the workflow connects, and `Skills` for per-skill details.
@@ -30,7 +31,9 @@ flowchart TB
         subgraph Q["current session"]
             direction TB
 
+            A["User Request"] -. optional .-> R("brainstormer") --> T[["docs/inbox/...<br/>brainstorm brief"]]
             A["User Request"] --> B("investigator") --> C[["docs/notes/...<br/>investigation note"]]
+            T -. optional input .-> B
 
             C -.-> D("resolver<br/>(optional)")
             D -. update .-> C
@@ -130,6 +133,13 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 
 - Use cases: session recap, handoff note creation, full conversation summary, workflow repetition analysis
 - Role: reconstructs the session chronologically, records concrete actions and outcomes, and appends repeated work pattern analysis
+
+### Brainstormer
+
+`brainstormer` is focused on open-ended discussion and idea development while maintaining a canonical inbox note that can feed the next workflow step.
+
+- Use cases: free-form brainstorming, vague request refinement, exploratory discussion, turning loose text or files into a concept-oriented brief
+- Role: creates or updates a note under `$PWD/docs/inbox`, extracts topics from explicit input or the current session, and continuously distills the conversation into what the user wants to do next, why it matters, core concepts, constraints, options, tradeoffs, and open questions for `supervisor` or `investigator`; if the user explicitly names code paths to consider, those can be preserved as user-provided anchors
 
 ### Supervisor
 
