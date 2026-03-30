@@ -176,10 +176,35 @@ Keep the path short. Usually 3 to 7 steps is enough.
 Each step should include:
 
 - `Scope`: the file group, component, or flow to inspect
+- `Behavior`: a compact explanation of what that code or logic does at runtime or in the overall flow
 - `Links`: one or more repo-local relative Markdown links for the concrete files or directories to open
 - `Check`: what the reader should verify or learn
 - `Why now`: why this step unlocks the rest
 - `Exit signal`: what gives enough confidence to move on
+
+Format the `Path` section as a nested bullet list for readability:
+
+- use one top-level bullet per step
+- under each step, add nested bullets for `Scope`, `Behavior`, `Links`, `Check`, `Why now`, and `Exit signal`
+- keep labels explicit instead of collapsing them into prose paragraphs
+- keep `Behavior` concise, usually one sentence, and make it specific to the actual control flow or responsibility
+
+Example shape:
+
+- Step 1: Open the request entry point
+  - `Scope`: HTTP handler and route wiring
+  - `Behavior`: accepts the incoming request, normalizes inputs, and decides which service path handles the call
+  - `Links`: `[src/http/routes.ts](../../src/http/routes.ts)`, `[src/http/handler.ts](../../src/http/handler.ts)`
+  - `Check`: where the request first branches and what inputs are normalized
+  - `Why now`: this frames the rest of the flow before diving into internal services
+  - `Exit signal`: you can state which downstream service owns the next transition
+- Step 2: Follow the core state change
+  - `Scope`: domain service and persistence boundary
+  - `Behavior`: validates business rules, computes the authoritative state transition, and persists the result
+  - `Links`: `[src/domain/service.ts](../../src/domain/service.ts)`, `[src/db/repository.ts](../../src/db/repository.ts)`
+  - `Check`: which state mutation is authoritative and where failures surface
+  - `Why now`: this is the semantic center of the change
+  - `Exit signal`: you can explain the write path and its main invariants
 
 Prefer an order like:
 
