@@ -1,10 +1,10 @@
-# My Skills Repository
+# dev-skills
 
-This repository is my collection of agent skills.
+Reusable agent skills for software development workflows.
 
 ## Overview
 
-This repository contains a set of focused agent skills that can be used independently or combined into a larger workflow.
+This repository contains focused agent skills for engineering work such as investigation, specification, planning, review, and recap. Each skill can be used on its own, or composed into a larger end-to-end workflow for repository-driven development.
 
 - `investigator`: repository research and technical analysis
 - `resolver`: best-effort inferred answers for open questions in documents and free-form text
@@ -16,7 +16,7 @@ This repository contains a set of focused agent skills that can be used independ
 - `brainstormer`: free-form ideation backed by a living inbox note under `docs/inbox`
 - `supervisor`: orchestration across the full workflow from investigation through recap, including resume and interrupt handling from existing workspace state
 
-Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references. See `Skill Relationships` for how the workflow connects, and `Skills` for per-skill details.
+Each skill lives in its own directory and includes a `SKILL.md`, agent config, and supporting references. Use `supervisor` when you want the full workflow, or call individual skills directly when you need one focused operation. See `Skill Relationships` for the orchestration model and `Skills` for per-skill details.
 
 ## Skill Relationships
 
