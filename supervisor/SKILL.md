@@ -228,17 +228,21 @@ After implementation, run `reviewer` against the implementation diff unless the 
 - Prefer `change-review`.
 - Default review scope to code, tests, and runtime configuration changed by the implementation phase.
 - Exclude workflow artifacts such as notes, specs, and plan-file churn unless the user explicitly wants them reviewed or they are the only meaningful changes.
+- When invoking `reviewer`, pass an explicit target rooted in the implementation diff; do not ask it to inspect the whole dirty working tree when review artifacts were just created.
 - Require `reviewer` to inspect the latest same-target review artifact before each pass and use it as the deduplication baseline.
 - Expect one main markdown review note under `$PWD/docs/notes/yyyy-MM-dd_*.md`.
 - Treat findings as primary output.
 - Capture any unresolved questions or testing gaps for the final summary.
 - Require each rerun to record only net-new findings or material status deltas; unchanged prior findings should remain in the earlier review artifact instead of being repeated.
+- If the first post-implementation review has no blocking findings, end the review loop immediately and continue to `pathfinder`; do not rerun `reviewer` just to reconfirm a clean result.
 - If the review surfaces blocking, high-confidence findings that should be fixed now, enter a review and implementation loop:
   - extract the concrete findings that require changes
   - run a narrowly scoped implementation pass to fix them
+  - rerun `reviewer` only when that fix pass changed code, tests, or runtime configuration inside the review scope
   - if that fix implementation changes the repository, append the work performed to the active ExecPlan before rerunning `reviewer`
-  - rerun `reviewer` on the updated implementation
+  - rerun `reviewer` on the updated implementation diff, not on the full dirty tree
   - continue until no blocking findings remain or a real blocker prevents a safe fix
+- If the attempted fix pass is a no-op or touches only workflow artifacts, do not rerun `reviewer`; carry the blocker or remaining risk into the final summary instead.
 - Treat correctness, security, data loss, crash, obvious regression, and equivalent P0 or P1 issues as blocking by default.
 - Non-blocking findings, residual risks, and speculative questions do not require another implementation pass unless the user asks for it.
 - Each rerun of `reviewer` should produce a new review artifact that continues the prior review artifact's filename series.
@@ -273,11 +277,12 @@ Run `recapper` after `pathfinder` as the final phase of the completed supervisor
    - retry once with tighter instructions
    - stop on a real blocker
 5. After implementation, run `reviewer`.
-6. If `reviewer` finds blocking issues that should be fixed now, run a narrow implementation pass; when that pass changes the repository, update the active ExecPlan to record the work before rerunning `reviewer`.
-7. Repeat step 6 until no blocking findings remain or a real blocker prevents further safe changes.
-8. Run `pathfinder` exactly once on the final post-loop implementation state.
-9. Run `recapper` exactly once after `pathfinder`.
-10. Return a concise summary with:
+6. If `reviewer` finds no blocking issues, stop the review loop immediately and continue to `pathfinder`.
+7. If `reviewer` finds blocking issues that should be fixed now, run a narrow implementation pass; only rerun `reviewer` when that pass changed code, tests, or runtime configuration in scope, and update the active ExecPlan before the rerun when repository changes were made.
+8. Repeat step 7 until no blocking findings remain or a real blocker prevents further safe changes.
+9. Run `pathfinder` exactly once on the final post-loop implementation state.
+10. Run `recapper` exactly once after `pathfinder`.
+11. Return a concise summary with:
    - completed phases
    - skipped phases
    - created or updated artifacts
@@ -303,6 +308,7 @@ Run `recapper` after `pathfinder` as the final phase of the completed supervisor
 - Do not finish a completed supervisor cycle without running `pathfinder` and then `recapper`.
 - Do not run `pathfinder` or `recapper` more than once in a single completed supervisor cycle.
 - Do not ignore a blocking review finding that the AI assistant can safely fix in the current workflow.
+- Do not rerun `reviewer` after a clean review or after a no-op fix pass.
 - Do not lose the artifact chain; always know which note, spec, and plan the current phase is based on.
 
 ## Quality Bar

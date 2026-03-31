@@ -53,7 +53,8 @@ flowchart TB
 ```
 
 - The usual flow is `investigator` first, optional refinement through `resolver` or `specifier`, then planning and execution through `planner`.
-- `reviewer` runs first after implementation; if it finds blocking issues worth fixing immediately, the workflow loops through implementation and review again before `pathfinder` runs.
+- `reviewer` runs first after implementation; if that review is clean, the workflow proceeds directly to `pathfinder`.
+- The workflow only loops through implementation and review again when `reviewer` found blocking issues and the fix pass actually changed code, tests, or runtime configuration in scope.
 - In one completed `supervisor` cycle, `pathfinder` and `recapper` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
 - `supervisor` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
 - When a prior run stopped halfway or the repository already contains manual edits, `supervisor` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
