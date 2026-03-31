@@ -116,7 +116,7 @@ The script detects each top-level directory that contains a `SKILL.md` and syncs
 `reviewer` supports both change review and existing code review.
 
 - Use cases: staged or unstaged review, commit review, branch review, PR review, feature review, file review, directory review
-- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, and saves the review as a markdown note under `$PWD/docs/notes`
+- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, always consults prior same-target review artifacts, and saves only net-new findings or material status changes to a markdown note under `$PWD/docs/notes`
 - Review artifact naming: if the same target is reviewed again, continue the existing review note filename as a numbered series instead of inventing a new unrelated name
 - Artifact links: use repo-local relative Markdown links so VSCode users can click from the note into source files and directories
 

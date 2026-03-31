@@ -102,19 +102,34 @@ For `code-review`:
 
 State the exact mode and target clearly in the review so the reader knows what is covered.
 
+## Prior Review Baseline
+
+Before starting either pass, always look for prior review artifacts for the same target under `$PWD/docs/notes`.
+
+- Prefer the existing filename series when one already exists for the target.
+- Otherwise match same-target review notes by the explicit mode and target statement near the top of the note, plus filename and recency cues.
+- Read the newest matching review artifact first, then inspect older entries in the same series only as needed to determine whether a point is already recorded, already fixed, intentionally deferred, or still unresolved.
+- Build an internal baseline of:
+  - already-reported unresolved findings
+  - resolved or no-longer-applicable findings
+  - prior risks or questions whose status is still unclear
+- Treat the latest same-target review artifact as the canonical record for already-known issues unless the current evidence shows a material status change.
+
 ## Standard Workflow
 
 1. Resolve the mode and exact review target first and state them explicitly.
-2. Gather the minimum context needed to review it:
+2. Locate the latest same-target review artifact, if one exists, and use it as the deduplication baseline for the current run.
+3. Gather the minimum context needed to review it:
    - diff shape and touched files for `change-review`
    - relevant surrounding code and tests for either mode
    - PR title and description when available
    - feature purpose, docs, or observable contract for `code-review`
    - commit messages when helpful
-3. Run Pass 1 using the rubric for the selected mode.
-4. Run Pass 2 using [second_pass_checklist.md](references/second_pass_checklist.md).
-5. Deduplicate results and keep only discrete, actionable points.
-6. Separate confirmed bugs from unproven risks or missing-context questions.
+4. Run Pass 1 using the rubric for the selected mode.
+5. Run Pass 2 using [second_pass_checklist.md](references/second_pass_checklist.md).
+6. Deduplicate results and keep only discrete, actionable points.
+7. Deduplicate again against the prior review baseline and keep only net-new findings or material status changes.
+8. Separate confirmed bugs from unproven risks or missing-context questions.
 
 ## Output Contract
 
@@ -134,13 +149,18 @@ Prefer this structure:
 4. `Change summary` only if it helps orient the reader
 
 State the exact mode and target near the top of the saved note.
+If a prior same-target review artifact was used as the baseline, link it near the top of the saved note.
 When referencing source files, tests, configs, docs, or directories in the saved note, use repo-local relative Markdown links from the note file so a human can click them in VSCode.
 Prefer plain file or directory links such as `[src/api/server.ts](../../src/api/server.ts)` over environment-specific URIs or absolute paths.
 If line precision matters, keep the link target as the file and put the line number in visible text such as `[src/api/server.ts](../../src/api/server.ts) line 42`.
 Each finding, risk, or open question that points at code should cite the smallest useful location with a clickable Markdown link.
 If the environment or caller also requires a specific review format such as JSON or inline comments, produce that format as needed, but still persist the main markdown review note unless the user explicitly asks not to save a file.
 
+Do not restate an older unresolved finding as a new finding.
+If a previously reported issue is still present with no meaningful status change, omit it from the new note and leave the earlier artifact as the canonical record.
+If a previously reported issue changed status materially, record only the delta and link the earlier artifact.
 If there are no actionable findings, say so explicitly and mention any remaining testing gaps or uncertainty.
+If there are no new actionable findings beyond issues already captured in the prior review series, say that explicitly instead of repeating those older findings.
 
 ## File Creation And Management
 
@@ -148,6 +168,7 @@ If there are no actionable findings, say so explicitly and mention any remaining
 - Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
 - When no prior review artifact exists for the same target, choose a descriptive base filename such as `yyyy-MM-dd_<target-slug>_review.md`.
 - When a prior review artifact exists for the same target, reuse that artifact's filename stem as the series root.
+- Before choosing the next filename, inspect the latest same-target review artifact and use it as both the series source and the deduplication baseline.
 - Treat an unsuffixed prior review file as the first entry in the series; save the next file as `<series-root>_02.md`, then `_03.md`, and so on.
 - If the latest matching review artifact already ends with `_<NN>.md`, strip that numeric suffix, keep the rest of the stem unchanged, and increment `NN`.
 - Prefer the most recent same-target review artifact when deciding the next filename in the series.
@@ -200,6 +221,7 @@ Treat Pass 2 as the complementary reviewer pass.
 - Do not stop after the first valid issue.
 - Do not inflate severity.
 - Do not present speculation as fact.
+- Do not repeat the same finding across successive review notes for the same target unless the current review adds a material status change.
 - Do not spend tokens summarizing every file.
 - Do not suggest large rewrites unless the current change clearly demands them.
 - Prefer a short set of high-signal comments over an exhaustive dump.

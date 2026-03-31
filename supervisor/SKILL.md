@@ -223,9 +223,11 @@ After implementation, run `reviewer` against the implementation diff unless the 
 - Prefer `change-review`.
 - Default review scope to code, tests, and runtime configuration changed by the implementation phase.
 - Exclude workflow artifacts such as notes, specs, and plan-file churn unless the user explicitly wants them reviewed or they are the only meaningful changes.
+- Require `reviewer` to inspect the latest same-target review artifact before each pass and use it as the deduplication baseline.
 - Expect one main markdown review note under `$PWD/docs/notes/yyyy-MM-dd_*.md`.
 - Treat findings as primary output.
 - Capture any unresolved questions or testing gaps for the final summary.
+- Require each rerun to record only net-new findings or material status deltas; unchanged prior findings should remain in the earlier review artifact instead of being repeated.
 - If the review surfaces blocking, high-confidence findings that should be fixed now, enter a review and implementation loop:
   - extract the concrete findings that require changes
   - run a narrowly scoped implementation pass to fix them
