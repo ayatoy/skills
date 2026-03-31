@@ -10,7 +10,17 @@ Create a detailed markdown research report for a user-provided topic and save it
 ## Inputs
 
 - Topic text: can be a single word, phrase, or long sentence.
+- A `.md` file path or pasted markdown to use as the investigation brief.
 - Optional constraints: scope, audience, deadline, required format, language.
+
+## Markdown Brief Handling
+
+When the user provides a `.md` file path or pasted markdown, treat that document as the primary investigation brief.
+
+- Read the document before broad repository exploration.
+- Use the document's stated goals, scope boundaries, constraints, open questions, and referenced artifacts to drive the investigation.
+- Do not collapse the document into a shorter paraphrase and then investigate only the paraphrase.
+- During synthesis, check findings back against the document and explicitly call out any requested area that remains unresolved or any conclusion that conflicts with the brief.
 
 ## Output Contract
 

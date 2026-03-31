@@ -28,6 +28,8 @@ Use a separate subagent for each work phase whenever subagents are available.
   - language
   - timebox
 
+When the user provides a `.md` file path or pasted markdown as source material for the workflow, pass that markdown artifact through to the next phase as the primary input instead of paraphrasing it into a shorter surrogate.
+
 ## Default Workflow
 
 1. `investigator`
@@ -147,6 +149,7 @@ Use subagents by default for every phase when `spawn_agent` is available.
 - Spawn one subagent per phase.
 - Use `fork_context=true` unless isolation is clearly better.
 - In the subagent prompt, explicitly invoke the target skill by name, for example `Use $investigator ...` or `Use $planner ...`, so the intended skill actually triggers.
+- When delegating from a user-provided `.md` document, pass the original document path or pasted markdown through directly and state that it is the primary input; do not replace it with a supervisor-authored summary unless the user explicitly asks for one.
 - Give each subagent a narrow task with:
   - the phase name
   - the exact user goal
