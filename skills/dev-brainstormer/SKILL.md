@@ -234,7 +234,7 @@ Use this structure in the inbox note:
 - Do not invoke `dev-supervisor` or any downstream subskill while brainstorming is still in progress.
 - Do not auto-exit brainstorming mode based on confidence, momentum, or note completeness.
 - Do not jump into implementation, planning, specification, or investigation unless the user explicitly ends the brainstorming phase and asks for that transition.
-- Prefer updating the existing inbox note over scattering partial notes across `docs/notes/`.
+- Prefer updating the existing inbox note over scattering partial notes across other workflow artifact directories.
 
 ## Quality Bar
 

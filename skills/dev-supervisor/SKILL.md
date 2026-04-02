@@ -18,7 +18,10 @@ Use a separate subagent for each work phase whenever subagents are available.
 - No explicit input, in which case inspect the workspace and infer whether a dev-supervisor cycle is already in progress
 - A free-form request describing a problem, goal, bug, feature, or investigation topic
 - Or an existing artifact path to resume from:
-  - `$PWD/docs/notes/...`
+  - `$PWD/docs/investigations/...`
+  - `$PWD/docs/reviews/...`
+  - `$PWD/docs/walkthroughs/...`
+  - `$PWD/docs/recaps/...`
   - `$PWD/docs/specs/...`
   - `$PWD/docs/plans/...`
 - Or an already-dirty repository state, including manual user edits, staged changes, or partially completed dev-supervisor artifacts
@@ -62,7 +65,8 @@ Treat pre-existing repository changes as a likely interrupted or manually advanc
 Inspect the repository for:
 
 - uncommitted changes in tracked or untracked files
-- the newest artifacts under `$PWD/docs/notes`, `$PWD/docs/specs`, and `$PWD/docs/plans`
+- the newest artifacts under `$PWD/docs/investigations`, `$PWD/docs/reviews`, `$PWD/docs/walkthroughs`, `$PWD/docs/recaps`, `$PWD/docs/specs`, and `$PWD/docs/plans`
+- when needed for resume compatibility, the newest legacy artifacts under `$PWD/docs/notes`
 - whether the newest plan file looks created-only versus partially executed
 - whether a recent review note series exists
 - whether recent `dev-pathfinder` or `dev-recapper` notes already exist for the same workstream
@@ -93,7 +97,7 @@ Manual user edits are an interrupt, not noise.
 Preserve them, treat them as the latest implementation state, and route the workflow to the next missing supervisory phase.
 
 - If the input is mainly a free-form request and there is no stronger workspace evidence, start with `dev-investigator`.
-- If the input is a note under `$PWD/docs/notes`, classify it before resuming:
+- If the input is a note under `$PWD/docs/investigations`, `$PWD/docs/reviews`, `$PWD/docs/walkthroughs`, `$PWD/docs/recaps`, or legacy `$PWD/docs/notes`, classify it before resuming:
   - treat it as an investigation note when it matches `dev-investigator`-style sections such as `Topic and scope`, `Findings`, or `Open questions and risks`
   - treat it as a reviewer note when it matches `dev-reviewer`-style sections such as `Findings`, `Open questions / assumptions`, or `Residual risks`
   - treat it as a pathfinder note when it matches `dev-pathfinder`-style sections such as `Target`, `Mode`, `Start here`, or `Path`
@@ -171,7 +175,7 @@ Use subagents by default for every phase when `spawn_agent` is available.
 This is the default entry point.
 
 - Always run `dev-investigator` first unless the user provided a stronger resume artifact.
-- Expect one main report under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
+- Expect one main report under `$PWD/docs/investigations/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Use that report as the canonical source for downstream phases.
 
 ### 2. Resolver
@@ -230,7 +234,7 @@ After implementation, run `dev-reviewer` against the implementation diff unless 
 - Exclude workflow artifacts such as notes, specs, and plan-file churn unless the user explicitly wants them reviewed or they are the only meaningful changes.
 - When invoking `dev-reviewer`, pass an explicit target rooted in the implementation diff; do not ask it to inspect the whole dirty working tree when review artifacts were just created.
 - Require `dev-reviewer` to inspect the latest same-target review artifact before each pass and use it as the deduplication baseline.
-- Expect one main markdown review note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
+- Expect one main markdown review note under `$PWD/docs/reviews/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Treat findings as primary output.
 - Capture any unresolved questions or testing gaps for the final summary.
 - Require each rerun to record only net-new findings or material status deltas; unchanged prior findings should remain in the earlier review artifact instead of being repeated.
@@ -255,7 +259,7 @@ Run `dev-pathfinder` only after the review and implementation loop is complete.
 - Use the final post-fix implementation state as the input scope.
 - Optimize for the code-reading path first; include workflow artifacts only when they clarify behavior or user intent.
 - Optimize for the user's own follow-up reading and verification path.
-- Expect one main markdown reading-path note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
+- Expect one main markdown reading-path note under `$PWD/docs/walkthroughs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Run this phase exactly once per completed dev-supervisor cycle.
 
 ### 8. Recapper
@@ -264,7 +268,7 @@ Run `dev-recapper` after `dev-pathfinder` as the final phase of the completed de
 
 - Use it to create a handoff-quality summary note for the current session.
 - This is always the last phase of a completed dev-supervisor cycle.
-- Expect exactly one main recap note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md` for the cycle; if `dev-recapper` is rerun for the same cycle, it should update that artifact rather than create a second recap note.
+- Expect exactly one main recap note under `$PWD/docs/recaps/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md` for the cycle; if `dev-recapper` is rerun for the same cycle, it should update that artifact rather than create a second recap note.
 
 ## Standard Orchestration Sequence
 

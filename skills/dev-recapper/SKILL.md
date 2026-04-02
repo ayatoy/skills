@@ -1,11 +1,11 @@
 ---
 name: dev-recapper
-description: Summarize the complete conversation so far in the current session and save or update a detailed markdown note under $PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Also investigate repeated work patterns that appeared during the session, identify recurring patterns that should become Agent Skills, and append both analyses. Use when the user asks for a session recap, handoff note, full conversation summary, or workflow repetition analysis.
+description: Summarize the complete conversation so far in the current session and save or update a detailed markdown note under $PWD/docs/recaps/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Also investigate repeated work patterns that appeared during the session, identify recurring patterns that should become Agent Skills, and append both analyses. Use when the user asks for a session recap, handoff note, full conversation summary, or workflow repetition analysis.
 ---
 
 # dev-recapper
 
-Create or update a detailed markdown note that captures the current session so far and save it to `$PWD/docs/notes/`.
+Create or update a detailed markdown note that captures the current session so far and save it to `$PWD/docs/recaps/`.
 
 ## Primary Source
 
@@ -26,7 +26,7 @@ Create or update a detailed markdown note that captures the current session so f
 ## Output Contract
 
 - Create or update exactly one main note under:
-  - `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
+  - `$PWD/docs/recaps/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 - Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
 - If the saved note includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 - If `dev-recapper` is run again for the same active session or workstream, prefer updating the existing recap note instead of creating a second recap note.
@@ -47,7 +47,8 @@ When `dev-recapper` is invoked again after more user interaction, treat the exis
 
 Prefer reusing an existing recap note when most of these are true:
 
-- it is the newest recap-like note under `$PWD/docs/notes/`
+- it is the newest recap-like note under `$PWD/docs/recaps/`
+- if no recap exists there yet, optionally fall back to legacy recap-like notes under `$PWD/docs/notes/`
 - it already uses recap sections such as `Session chronology`, `Current status`, or `Repeated work patterns`
 - its scope, filename hint, or linked artifacts match the current conversation
 - no stronger evidence suggests the user wants a separate independent recap
@@ -71,7 +72,7 @@ Create a new recap note only when the evidence indicates a genuinely separate se
    - what the user asked for
    - whether the note should cover the whole session or only a named portion
 2. Determine whether an existing recap note should be reused:
-   - inspect the newest recap-like notes under `$PWD/docs/notes/` when needed
+   - inspect the newest recap-like notes under `$PWD/docs/recaps/` when needed
    - choose one existing note as the update target when the current run is a continuation
    - otherwise prepare a new note path
 3. Reconstruct the session chronologically from the conversation history.
@@ -91,7 +92,7 @@ Create a new recap note only when the evidence indicates a genuinely separate se
    - repeated transformations that likely want a stable checklist, template, script, or reference bundle
    - repeated tool choreography that is easy to forget or expensive to rediscover
    - repeated workarounds or repair loops that could be prevented by a focused skill
-8. Save the single resulting note under `$PWD/docs/notes/`.
+8. Save the single resulting note under `$PWD/docs/recaps/`.
 
 ## What To Capture
 

@@ -32,7 +32,7 @@ flowchart TB
             direction TB
 
             A["User Request or Issue"] -. optional .-> R("dev-brainstormer") --> T[["docs/inbox/...<br/>brainstorm brief"]]
-            A["User Request or Issue"] --> B("dev-investigator") --> C[["docs/notes/...<br/>investigation note"]]
+            A["User Request or Issue"] --> B("dev-investigator") --> C[["docs/investigations/...<br/>investigation note"]]
             T -. optional input .-> B
 
             C -.-> D("dev-resolver<br/>(optional)")
@@ -44,11 +44,11 @@ flowchart TB
             C --> F
             F --> H[["docs/plans/...<br/>ExecPlan"]] --> I("dev-planner execution<br/>(implementation)") --> J[["repository changes"]]
 
-            J --> K("dev-reviewer") --> M[["docs/notes/...<br/>review note series"]] --> X{"blocking<br/>findings?"}
-            X -- no --> L("dev-pathfinder") --> N[["docs/notes/...<br/>reading path note"]]
+            J --> K("dev-reviewer") --> M[["docs/reviews/...<br/>review note series"]] --> X{"blocking<br/>findings?"}
+            X -- no --> L("dev-pathfinder") --> N[["docs/walkthroughs/...<br/>reading path note"]]
             X -- yes --> Y("fix implementation") --> J
         end
-        Q --> O("dev-recapper") --> P[["docs/notes/...<br/>session recap"]]
+        Q --> O("dev-recapper") --> P[["docs/recaps/...<br/>session recap"]]
     end
 ```
 
@@ -58,7 +58,7 @@ flowchart TB
 - In one completed `dev-supervisor` cycle, `dev-pathfinder` and `dev-recapper` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
 - `dev-supervisor` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
 - When a prior run stopped halfway or the repository already contains manual edits, `dev-supervisor` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
-- Notes are primarily emitted under `docs/notes/...`, specs under `docs/specs/...`, and ExecPlans under `docs/plans/...`.
+- Artifacts are primarily emitted under `docs/investigations/...`, `docs/reviews/...`, `docs/walkthroughs/...`, `docs/recaps/...`, `docs/specs/...`, and `docs/plans/...`.
 - `dev-recapper` closes the workflow by summarizing the session, the work performed, and the artifacts produced.
 
 ## Installation
@@ -123,7 +123,7 @@ The uninstall script removes only the skill directories represented by this repo
 `dev-pathfinder` supports efficient human review and code reading preparation.
 
 - Use cases: staged or unstaged changes, commit review, commit range review, PR review, feature reading, subsystem reading
-- Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints, then saves it as a markdown note under `$PWD/docs/notes`
+- Role: converts raw diffs or code areas into a short ordered reading path with focus areas and watchpoints, then saves it as a markdown note under `$PWD/docs/walkthroughs`
 - Artifact links: use repo-local relative Markdown links so VSCode users can click from the note into source files and directories
 
 ### dev-reviewer
@@ -131,7 +131,7 @@ The uninstall script removes only the skill directories represented by this repo
 `dev-reviewer` supports both change review and existing code review.
 
 - Use cases: staged or unstaged review, commit review, branch review, PR review, feature review, file review, directory review
-- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, always consults prior same-target review artifacts, and saves only net-new findings or material status changes to a markdown note under `$PWD/docs/notes`
+- Role: uses `change-review` for diffs and `code-review` for existing code areas, then applies a broader second pass for intent, security, regression, testing, operations, and AI readability, always consults prior same-target review artifacts, and saves only net-new findings or material status changes to a markdown note under `$PWD/docs/reviews`
 - Review artifact naming: if the same target is reviewed again, continue the existing review note filename as a numbered series instead of inventing a new unrelated name
 - Artifact links: use repo-local relative Markdown links so VSCode users can click from the note into source files and directories
 

@@ -104,7 +104,9 @@ State the exact mode and target clearly in the review so the reader knows what i
 
 ## Prior Review Baseline
 
-Before starting either pass, always look for prior review artifacts for the same target under `$PWD/docs/notes`.
+Before starting either pass, always look for prior review artifacts for the same target under `$PWD/docs/reviews`.
+
+If no same-target artifact exists there, it is acceptable to fall back to legacy review artifacts under `$PWD/docs/notes`.
 
 - Prefer the existing filename series when one already exists for the target.
 - Otherwise match same-target review notes by the explicit mode and target statement near the top of the note, plus filename and recency cues.
@@ -135,7 +137,7 @@ Before starting either pass, always look for prior review artifacts for the same
 
 Save exactly one main review note under:
 
-- `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
+- `$PWD/docs/reviews/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 
 Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
 If the saved review includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
@@ -169,7 +171,7 @@ If there are no new actionable findings beyond issues already captured in the pr
 ## File Creation And Management
 
 - Create the destination directory if needed.
-- Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC filename prefix.
+- Save the review as a markdown artifact under `$PWD/docs/reviews/` with a `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC filename prefix.
 - When no prior review artifact exists for the same target, choose a descriptive base filename such as `yyyy-MM-dd'T'HH-mm-ss'Z'_<target-slug>_review.md`.
 - When a prior review artifact exists for the same target, reuse that artifact's filename stem as the series root.
 - Before choosing the next filename, inspect the latest same-target review artifact and use it as both the series source and the deduplication baseline.

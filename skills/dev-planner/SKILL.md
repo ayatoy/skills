@@ -24,7 +24,7 @@ Create an execution plan following `PLANS.md` methodology.
 When the input is ambiguous, prefer these interpretations:
 
 - A file under `$PWD/docs/plans` that matches ExecPlan structure is an executable plan input
-- A file under `$PWD/docs/specs` or `$PWD/docs/notes` is source material for plan creation, not a directly executable plan
+- A file under `$PWD/docs/specs`, `$PWD/docs/investigations`, `$PWD/docs/reviews`, `$PWD/docs/walkthroughs`, `$PWD/docs/recaps`, or legacy `$PWD/docs/notes` is source material for plan creation, not a directly executable plan
 - If a pasted document does not clearly match ExecPlan structure, treat it as source material and create or update a plan instead of executing it
 
 ## Instructions
