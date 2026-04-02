@@ -1,4 +1,4 @@
 interface:
   display_name: "dev-investigator"
   short_description: "Conduct an in-depth investigation of the topic and save it to $PWD/docs/notes"
-  default_prompt: "Use $dev-investigator to investigate the given topic deeply in this repository and save the report under $PWD/docs/notes with a yyyy-MM-dd filename prefix."
+  default_prompt: "Use $dev-investigator to investigate the given topic deeply in this repository and save the report under $PWD/docs/notes with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix. Use the same UTC format for any created or updated timestamp written inside the artifact."

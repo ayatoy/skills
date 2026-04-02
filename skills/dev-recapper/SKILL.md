@@ -1,6 +1,6 @@
 ---
 name: dev-recapper
-description: Summarize the complete conversation so far in the current session and save or update a detailed markdown note under $PWD/docs/notes/yyyy-MM-dd_*.md. Also investigate repeated work patterns that appeared during the session, identify recurring patterns that should become Agent Skills, and append both analyses. Use when the user asks for a session recap, handoff note, full conversation summary, or workflow repetition analysis.
+description: Summarize the complete conversation so far in the current session and save or update a detailed markdown note under $PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Also investigate repeated work patterns that appeared during the session, identify recurring patterns that should become Agent Skills, and append both analyses. Use when the user asks for a session recap, handoff note, full conversation summary, or workflow repetition analysis.
 ---
 
 # dev-recapper
@@ -26,8 +26,9 @@ Create or update a detailed markdown note that captures the current session so f
 ## Output Contract
 
 - Create or update exactly one main note under:
-  - `$PWD/docs/notes/yyyy-MM-dd_*.md`
-- Use today's local date for `yyyy-MM-dd` unless the user requests another date.
+  - `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
+- Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
+- If the saved note includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 - If `dev-recapper` is run again for the same active session or workstream, prefer updating the existing recap note instead of creating a second recap note.
 - Write the saved note in the user's language unless the user asks otherwise.
 - Capture the session in enough detail that another strong engineer can continue the work without reopening the full transcript.
@@ -35,7 +36,7 @@ Create or update a detailed markdown note that captures the current session so f
 - Append a dedicated recommendation section for recurring patterns that are strong candidates for Agent Skill creation.
 - Write the saved note as normal Markdown content, not inside an outer fenced code block.
 - When referencing source files, tests, configs, docs, plans, specs, notes, or directories in the saved note, use repo-local relative Markdown links from the note file so a human can click them in VSCode.
-- Prefer plain file or directory links such as `[docs/specs/2026-03-28_example.md](../../docs/specs/2026-03-28_example.md)` over environment-specific URIs or absolute paths.
+- Prefer plain file or directory links such as `[docs/specs/2026-03-28T14-22-05Z_example.md](../../docs/specs/2026-03-28T14-22-05Z_example.md)` over environment-specific URIs or absolute paths.
 - If line precision matters, keep the link target as the file and put the line number in visible text such as `[src/app/main.ts](../../src/app/main.ts) line 42`.
 - Never wrap Markdown links in backticks, inline code, or fenced code blocks in the saved note; links must render in Markdown preview.
 - Never emit local filesystem absolute paths such as `/Users/...` in the saved note. If a workspace-rooted path must appear in prose, rewrite it with a `$PWD/...` placeholder instead.

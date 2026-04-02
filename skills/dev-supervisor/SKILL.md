@@ -171,7 +171,7 @@ Use subagents by default for every phase when `spawn_agent` is available.
 This is the default entry point.
 
 - Always run `dev-investigator` first unless the user provided a stronger resume artifact.
-- Expect one main report under `$PWD/docs/notes/yyyy-MM-dd_*.md`.
+- Expect one main report under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Use that report as the canonical source for downstream phases.
 
 ### 2. Resolver
@@ -208,7 +208,7 @@ Run `dev-planner` to create or update an ExecPlan using:
 - the resolved note if `dev-resolver` edited it or produced a sibling file
 - the spec if one exists
 
-Expect one primary ExecPlan under `$PWD/docs/plans/yyyy-MM-dd_*.md`.
+Expect one primary ExecPlan under `$PWD/docs/plans/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 
 ### 5. Planner For Execution
 
@@ -230,7 +230,7 @@ After implementation, run `dev-reviewer` against the implementation diff unless 
 - Exclude workflow artifacts such as notes, specs, and plan-file churn unless the user explicitly wants them reviewed or they are the only meaningful changes.
 - When invoking `dev-reviewer`, pass an explicit target rooted in the implementation diff; do not ask it to inspect the whole dirty working tree when review artifacts were just created.
 - Require `dev-reviewer` to inspect the latest same-target review artifact before each pass and use it as the deduplication baseline.
-- Expect one main markdown review note under `$PWD/docs/notes/yyyy-MM-dd_*.md`.
+- Expect one main markdown review note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Treat findings as primary output.
 - Capture any unresolved questions or testing gaps for the final summary.
 - Require each rerun to record only net-new findings or material status deltas; unchanged prior findings should remain in the earlier review artifact instead of being repeated.
@@ -255,7 +255,7 @@ Run `dev-pathfinder` only after the review and implementation loop is complete.
 - Use the final post-fix implementation state as the input scope.
 - Optimize for the code-reading path first; include workflow artifacts only when they clarify behavior or user intent.
 - Optimize for the user's own follow-up reading and verification path.
-- Expect one main markdown reading-path note under `$PWD/docs/notes/yyyy-MM-dd_*.md`.
+- Expect one main markdown reading-path note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
 - Run this phase exactly once per completed dev-supervisor cycle.
 
 ### 8. Recapper
@@ -264,7 +264,7 @@ Run `dev-recapper` after `dev-pathfinder` as the final phase of the completed de
 
 - Use it to create a handoff-quality summary note for the current session.
 - This is always the last phase of a completed dev-supervisor cycle.
-- Expect exactly one main recap note under `$PWD/docs/notes/yyyy-MM-dd_*.md` for the cycle; if `dev-recapper` is rerun for the same cycle, it should update that artifact rather than create a second recap note.
+- Expect exactly one main recap note under `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md` for the cycle; if `dev-recapper` is rerun for the same cycle, it should update that artifact rather than create a second recap note.
 
 ## Standard Orchestration Sequence
 

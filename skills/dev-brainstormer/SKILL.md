@@ -1,6 +1,6 @@
 ---
 name: dev-brainstormer
-description: Start a free-form brainstorming conversation, create or update a canonical inbox note under $PWD/docs/inbox/yyyy-MM-dd_*.md, and continuously distill the discussion into an abstract, concept-oriented brief for what the user wants to do next. Use when the user wants to think aloud, explore ideas, refine vague requests, or turn loose inputs such as text, files, or the current session into a strong upstream note for dev-supervisor or dev-investigator without overconstraining later investigation.
+description: Start a free-form brainstorming conversation, create or update a canonical inbox note under $PWD/docs/inbox/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md, and continuously distill the discussion into an abstract, concept-oriented brief for what the user wants to do next. Use when the user wants to think aloud, explore ideas, refine vague requests, or turn loose inputs such as text, files, or the current session into a strong upstream note for dev-supervisor or dev-investigator without overconstraining later investigation.
 ---
 
 # dev-brainstormer
@@ -38,9 +38,10 @@ If the user provides no explicit input, use the relevant session history as the 
 ## Output Contract
 
 - Create or update exactly one main inbox note under:
-  - `$PWD/docs/inbox/yyyy-MM-dd_*.md`
+  - `$PWD/docs/inbox/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 - Create the inbox note at the start of the brainstorming run, before substantive ideation continues.
-- Use today's local date for `yyyy-MM-dd` unless the user asks for another date.
+- Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user asks for another exact UTC timestamp.
+- If the saved note includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 - Write the note in the user's language unless asked otherwise.
 - Keep the inbox note as the canonical artifact for the brainstorming thread.
 - Make the note useful as a handoff or starting brief for `dev-supervisor` or `dev-investigator`.
@@ -189,9 +190,9 @@ Treat concrete code paths as optional anchors, not as an exhaustive or binding i
 
 - Create `$PWD/docs/inbox/` if it does not exist.
 - Prefer filenames like:
-  - `$PWD/docs/inbox/yyyy-MM-dd_topic-slug.md`
+  - `$PWD/docs/inbox/yyyy-MM-dd'T'HH-mm-ss'Z'_topic-slug.md`
 - If no clear topic slug exists yet, use:
-  - `$PWD/docs/inbox/yyyy-MM-dd_brainstorm.md`
+  - `$PWD/docs/inbox/yyyy-MM-dd'T'HH-mm-ss'Z'_brainstorm.md`
 - When continuing an existing thread, reuse the most relevant current inbox note when defensible.
 - Do not create multiple competing inbox notes for the same active thread unless the user asks for separation.
 - Do not include local absolute paths, `file://` URLs, or editor-specific URIs in the saved note.

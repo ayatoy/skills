@@ -135,9 +135,10 @@ Before starting either pass, always look for prior review artifacts for the same
 
 Save exactly one main review note under:
 
-- `$PWD/docs/notes/yyyy-MM-dd_*.md`
+- `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 
-Use today's local date for `yyyy-MM-dd` unless the user requests another date.
+Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
+If the saved review includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 Write the review in the user's language unless asked otherwise.
 Use a stable filename series when reviewing the same target more than once.
 Write the saved review as normal Markdown content, not inside an outer fenced code block.
@@ -168,8 +169,8 @@ If there are no new actionable findings beyond issues already captured in the pr
 ## File Creation And Management
 
 - Create the destination directory if needed.
-- Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
-- When no prior review artifact exists for the same target, choose a descriptive base filename such as `yyyy-MM-dd_<target-slug>_review.md`.
+- Save the review as a markdown artifact under `$PWD/docs/notes/` with a `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC filename prefix.
+- When no prior review artifact exists for the same target, choose a descriptive base filename such as `yyyy-MM-dd'T'HH-mm-ss'Z'_<target-slug>_review.md`.
 - When a prior review artifact exists for the same target, reuse that artifact's filename stem as the series root.
 - Before choosing the next filename, inspect the latest same-target review artifact and use it as both the series source and the deduplication baseline.
 - Treat an unsuffixed prior review file as the first entry in the series; save the next file as `<series-root>_02.md`, then `_03.md`, and so on.

@@ -1,6 +1,6 @@
 # {title}
 
-- Created on: yyyy-MM-dd HH:mmXXX
+- Created on: yyyy-MM-dd'T'HH-mm-ss'Z'
 - Spec type: {spec_type}
 - Audience: {audience}
 

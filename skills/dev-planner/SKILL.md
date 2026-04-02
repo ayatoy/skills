@@ -36,7 +36,8 @@ When the input is ambiguous, prefer these interpretations:
 ## Manage plan files
 
 Find, read, update, or delete plan files in `$PWD/docs/plans`, always creating a plan file to facilitate collaboration with the user; when creating or updating a plan, always refer to PLANS.md; write the plan file in the user's language unless the user asks otherwise, but switch to English for narrowly scoped passages when higher precision or technical rigor is clearly needed, as plan files are co-edited with the user and updated interactively as needed.
-When creating a plan file, prepend the filename with the `yyyy-MM-dd_` prefix.
+When creating a plan file, prepend the filename with the `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC prefix.
+If the saved plan includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 Do not include local paths or other environment-specific information in plan files; use appropriate placeholders such as `$PWD` instead.
 Write the saved plan file as normal Markdown content, not inside an outer fenced code block.
 When referencing repository files, tests, configs, docs, notes, specs, or directories in a saved plan, use repo-local relative Markdown links from the plan file so a human can click them in VSCode.

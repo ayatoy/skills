@@ -1,4 +1,4 @@
 interface:
   display_name: "dev-pathfinder"
   short_description: "Turn diffs or code areas into a prioritized reading path and save it under $PWD/docs/notes"
-  default_prompt: "Use $dev-pathfinder to turn the current changes, a commit, a PR, or a code area into a concise human reading path with focus areas, watchpoints, and an optional Mermaid diagram. Save the result as a markdown note under $PWD/docs/notes with a yyyy-MM-dd filename prefix."
+  default_prompt: "Use $dev-pathfinder to turn the current changes, a commit, a PR, or a code area into a concise human reading path with focus areas, watchpoints, and an optional Mermaid diagram. Save the result as a markdown note under $PWD/docs/notes with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix. Use the same UTC format for any created or updated timestamp written inside the artifact."

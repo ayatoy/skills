@@ -1,6 +1,6 @@
 ---
 name: dev-investigator
-description: Investigate a given topic deeply in the current repository and produce a detailed research report saved at $PWD/docs/notes/yyyy-MM-dd_*.md. Use when the user asks for a deep dive, technical investigation, comparative analysis, root-cause research, or background study and expects a persisted markdown note.
+description: Investigate a given topic deeply in the current repository and produce a detailed research report saved at $PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Use when the user asks for a deep dive, technical investigation, comparative analysis, root-cause research, or background study and expects a persisted markdown note.
 ---
 
 # Topic Investigation Reporter
@@ -25,8 +25,9 @@ When the user provides a `.md` file path or pasted markdown, treat that document
 ## Output Contract
 
 - Save exactly one main report file under:
-  - `$PWD/docs/notes/yyyy-MM-dd_*.md`
-- Use today's local date for `yyyy-MM-dd` unless the user requests another date.
+  - `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
+- Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
+- If the saved report includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 - Write the saved report in the user's language unless the user asks otherwise.
 - Keep report content evidence-based and traceable.
 - Write the saved report as normal Markdown content, not inside an outer fenced code block.
@@ -51,7 +52,7 @@ When the user provides a `.md` file path or pasted markdown, treat that document
 
 ## File Creation and Management
 
-Create the destination path and template with: `$HOME/.agents/skills/dev-investigator/references/TEMPLATE.md` and save the filled report to `$PWD/docs/notes/yyyy-MM-dd_*.md`. Always use the `yyyy-MM-dd_` prefix for filenames. Do not include local paths or environment-specific information in the report; use placeholders like `$PWD` instead. 
+Create the destination path and template with: `$HOME/.agents/skills/dev-investigator/references/TEMPLATE.md` and save the filled report to `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`. Always use the `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC prefix for filenames. Do not include local paths or environment-specific information in the report; use placeholders like `$PWD` instead. 
 This prints the final path and creates a draft markdown file if it does not exist.
 - Do not include local absolute paths, `file://` URLs, `vscode://` URIs, or other machine-specific details in the saved note.
 - If a saved note needs to mention a local artifact path in prose, use a `$PWD/...` placeholder rather than a machine-specific absolute path.

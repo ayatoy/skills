@@ -1,6 +1,6 @@
 # {topic} investigation report
 
-- Created on: yyyy-MM-dd HH:mmXXX
+- Created on: yyyy-MM-dd'T'HH-mm-ss'Z'
 - Topic: {topic}
 
 ## TL;DR

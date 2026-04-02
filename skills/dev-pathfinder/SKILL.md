@@ -59,9 +59,10 @@ Use these default inference rules:
 
 Save exactly one main reading-path note under:
 
-- `$PWD/docs/notes/yyyy-MM-dd_*.md`
+- `$PWD/docs/notes/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 
-Use today's local date for `yyyy-MM-dd` unless the user requests another date.
+Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
+If the saved note includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 Write the output in the user's language unless asked otherwise.
 Write the saved note as normal Markdown content, not inside an outer fenced code block.
 
@@ -88,7 +89,7 @@ Save the guide as markdown and keep the saved note as the canonical artifact for
 ## File Creation And Management
 
 - Create the destination directory if needed.
-- Save the reading path under `$PWD/docs/notes/` with a `yyyy-MM-dd_` filename prefix.
+- Save the reading path under `$PWD/docs/notes/` with a `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC filename prefix.
 - Do not include local absolute paths, `file://` URLs, `vscode://` URIs, or other machine-specific details in the saved note.
 - If a saved note needs to mention a local artifact path, use a `$PWD/...` placeholder rather than a machine-specific absolute path.
 - Use repo-local relative Markdown links from the saved note to any referenced source, test, doc, config, or directory.

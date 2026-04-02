@@ -1,6 +1,6 @@
 ---
 name: dev-specifier
-description: Draft a clear specification from an investigation report, or from a free-form request plus supporting context, and save it under $PWD/docs/specs/yyyy-MM-dd_*.md.
+description: Draft a clear specification from an investigation report, or from a free-form request plus supporting context, and save it under $PWD/docs/specs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md.
 ---
 
 # Specification Drafter
@@ -21,14 +21,15 @@ Create a decision-ready markdown specification for a user-provided feature, prod
 ## Output Contract
 
 - Save exactly one main specification file under:
-  - `$PWD/docs/specs/yyyy-MM-dd_*.md`
-- Use today's local date for `yyyy-MM-dd` unless the user requests another date.
+  - `$PWD/docs/specs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
+- Use the current UTC timestamp in `yyyy-MM-dd'T'HH-mm-ss'Z'` format for the filename prefix unless the user requests another exact UTC timestamp.
+- If the saved specification includes any created or updated timestamp in its content, use the same `UTC` format: `yyyy-MM-dd'T'HH-mm-ss'Z'`.
 - Write the saved specification in the user's language unless the user asks otherwise.
 - Treat the output as a draft specification unless the user explicitly asks for a final spec.
 - Keep the document traceable: every major requirement, decision, or assumption should be tied to an input, evidence, or explicit open question.
 - Write the saved specification as normal Markdown content, not inside an outer fenced code block.
 - When referencing source files, tests, configs, docs, notes, or directories in the saved specification, use repo-local relative Markdown links from the spec file so a human can click them in VSCode.
-- Prefer plain file or directory links such as `[docs/notes/2026-03-28_topic.md](../notes/2026-03-28_topic.md)` over environment-specific URIs or absolute paths.
+- Prefer plain file or directory links such as `[docs/notes/2026-03-28T14-22-05Z_topic.md](../notes/2026-03-28T14-22-05Z_topic.md)` over environment-specific URIs or absolute paths.
 - If line precision matters, keep the link target as the file and put the line number in visible text such as `[src/api/server.ts](../../src/api/server.ts) line 42`.
 - Never wrap Markdown links in backticks, inline code, or fenced code blocks in the saved specification; links must render in Markdown preview.
 - Never emit local filesystem absolute paths such as `/Users/...` in the saved specification. If a workspace-rooted path must appear in prose, rewrite it with a `$PWD/...` placeholder instead.
@@ -61,7 +62,7 @@ Create a decision-ready markdown specification for a user-provided feature, prod
 
 ## File Creation and Management
 
-Create the destination path and template with `$HOME/.agents/skills/dev-specifier/references/TEMPLATE.md` and save the filled draft to `$PWD/docs/specs/yyyy-MM-dd_*.md`. Always use the `yyyy-MM-dd_` prefix for filenames. Do not include local paths or environment-specific information in the spec; use placeholders like `$PWD` instead.
+Create the destination path and template with `$HOME/.agents/skills/dev-specifier/references/TEMPLATE.md` and save the filled draft to `$PWD/docs/specs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`. Always use the `yyyy-MM-dd'T'HH-mm-ss'Z'_` UTC prefix for filenames. Do not include local paths or environment-specific information in the spec; use placeholders like `$PWD` instead.
 - Do not include local absolute paths, `file://` URLs, `vscode://` URIs, or other machine-specific details in the saved spec.
 - If a saved spec needs to mention a local artifact path in prose, use a `$PWD/...` placeholder rather than a machine-specific absolute path.
 - Use repo-local relative Markdown links from the saved spec to any referenced source, test, doc, config, note, or directory.
