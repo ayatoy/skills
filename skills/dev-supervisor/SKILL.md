@@ -1,6 +1,6 @@
 ---
 name: dev-supervisor
-description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Usually start with `dev-investigator`, then optionally run `dev-resolver` and `dev-specifier`, use `dev-planner` to create and execute an ExecPlan, run a `dev-reviewer`-driven fix loop until blocking issues are resolved, then run `dev-pathfinder`, and finish with `dev-recapper`. When the workspace already shows in-progress dev-supervisor artifacts or repository changes, infer the current phase and resume or interrupt from there. Prefer running each phase in a subagent while the AI assistant stays in the main thread as the dev-supervisor.
+description: Orchestrate an end-to-end repository workflow by supervising the local skills in this repo. Usually start with `dev-investigator`, then optionally run `dev-resolver` and `dev-specifier`, use `dev-planner` to create and execute an ExecPlan, run a `dev-reviewer`-driven fix loop until blocking issues are resolved, then run `dev-pathfinder`, and finish with `dev-recapper`. When the workspace already shows in-progress dev-supervisor artifacts or repository changes, infer the current phase and resume or interrupt from there. Support `execution_mode=auto|local|subagents` so the same workflow can run either with phase subagents or entirely in the main thread.
 ---
 
 # dev-supervisor
@@ -11,7 +11,7 @@ A complete dev-supervisor cycle always ends with exactly one `dev-pathfinder` ru
 For a completed cycle, each of those phases must produce exactly one main artifact for that cycle.
 
 Keep the AI assistant in the main thread as the orchestrator.
-Use a separate subagent for each work phase whenever subagents are available.
+Resolve an execution mode before dispatching any phase work.
 
 ## Inputs
 
@@ -28,10 +28,59 @@ Use a separate subagent for each work phase whenever subagents are available.
 - Optional constraints:
   - stop after a named phase
   - resume from a named phase
+  - execution mode
   - language
   - timebox
 
 When the user provides a `.md` file path or pasted markdown as source material for the workflow, pass that markdown artifact through to the next phase as the primary input instead of paraphrasing it into a shorter surrogate.
+
+## Execution Mode Selection
+
+`dev-supervisor` supports `execution_mode` values:
+
+- `auto`: default behavior; use phase subagents when available, otherwise run locally in the main thread
+- `local`: do not use `spawn_agent`; run each phase locally in the main thread in the same workflow order
+- `subagents`: use a separate subagent for each phase unless a real platform limitation prevents it
+
+Users may specify the mode either with an exact token such as `execution_mode=local` or natural language such as:
+
+- `no subagents`
+- `run locally`
+- `main thread only`
+- `use subagents`
+
+Document canonical execution-mode intents in English, but interpret the user's actual language semantically.
+
+Treat intents like these as valid signals for `local`:
+
+- `no subagents`
+- `run locally`
+- `main thread only`
+- `do this without delegation`
+
+Treat intents like these as valid signals for `subagents`:
+
+- `use subagents`
+- `delegate each phase`
+- `run this with subagents`
+- `use the normal delegated flow`
+
+Treat vague phrases like these as insufficient on their own:
+
+- `keep it simple`
+- `just do it`
+- `go ahead`
+- `use the usual approach`
+
+Interpret the user's wording by intent rather than exact phrase matching.
+Treat the English examples above as representative phrases, not the only accepted wording.
+Interpret equivalent phrasing in the user's language semantically rather than requiring exact trigger phrases.
+Minor wording differences, tense differences, and polite phrasing should not matter.
+Ambiguous phrasing should still be treated as ambiguous even if it contains words like `local`, `delegate`, `subagent`, or `main thread`.
+When the user's wording suggests a preference about execution style but does not clearly resolve to `local` or `subagents`, ask one short clarification question before switching modes.
+If multiple explicit mode directives conflict, honor the last explicit one.
+If no explicit mode is given, default to `auto`.
+Briefly state the resolved execution mode near the start of the run, for example `Execution mode: local`.
 
 ## Default Workflow
 
@@ -131,8 +180,10 @@ If two interpretations are equally plausible and choosing the wrong one would ri
 The AI assistant in the main thread is responsible for:
 
 - deciding the current phase
+- resolving the execution mode
 - inferring whether the workspace reflects a fresh request, a paused dev-supervisor cycle, or a manual interrupt
-- spawning and coordinating subagents
+- spawning and coordinating subagents when the resolved execution mode uses them
+- performing the phase locally when the resolved execution mode is `local` or when `auto` falls back locally
 - passing the minimum necessary context to each phase
 - collecting artifact paths and key outcomes
 - keeping track of the active ExecPlan path once `dev-planner` has created or selected it
@@ -146,9 +197,28 @@ The AI assistant in the main thread is responsible for:
 The main thread should not duplicate the deep work already delegated to a subagent unless that delegation clearly failed.
 - Ensure every saved artifact and user-facing deliverable produced by downstream skills matches the user's language unless the user asks otherwise.
 
-## Subagent Rules
+## Execution Strategy
+
+The workflow phases, artifact contracts, review loop, and completion criteria do not change across execution modes.
+Only the phase execution mechanism changes.
+
+### `auto`
 
 Use subagents by default for every phase when `spawn_agent` is available.
+If subagents are unavailable or clearly unsuitable for the current phase, run that phase locally in the same order and say so briefly.
+
+### `local`
+
+Do not call `spawn_agent`.
+Run each phase directly in the main thread in the same order, using the same upstream artifacts and acceptance criteria that would apply to a delegated phase.
+Do not weaken the workflow just because the run is local.
+
+### `subagents`
+
+Use a separate subagent for each work phase unless a real platform limitation prevents it.
+If a required phase cannot run in a subagent, say so briefly and fall back to a local run for that phase rather than abandoning the workflow.
+
+### Subagent Dispatch Rules
 
 - Spawn one subagent per phase.
 - Use `fork_context=true` unless isolation is clearly better.
@@ -166,7 +236,6 @@ Use subagents by default for every phase when `spawn_agent` is available.
 - Run `dev-pathfinder` exactly once after the review and implementation loop is complete.
 - Run `dev-recapper` exactly once after `dev-pathfinder`, as the final phase of a completed dev-supervisor cycle.
 - Do not create multiple main `dev-pathfinder` artifacts or multiple main `dev-recapper` artifacts for one completed dev-supervisor cycle.
-- If subagents are unavailable, run the workflow locally in the same order and say so briefly.
 
 ## Phase Selection Rules
 
@@ -222,7 +291,8 @@ Important:
 
 - Pass the exact ExecPlan file path as the primary input to the second `dev-planner` run.
 - This satisfies `dev-planner`'s explicit execution rule; do not rely on vague approval text.
-- Keep the main thread focused on supervision while the dev-planner execution subagent performs the implementation.
+- In `subagents` mode, keep the main thread focused on supervision while the dev-planner execution subagent performs the implementation.
+- In `local` mode, execute the same plan in the main thread without changing the plan's scope or acceptance bar.
 - Treat the ExecPlan selected here as the active plan file for the rest of the dev-supervisor cycle.
 
 ### 6. Reviewer
@@ -273,7 +343,9 @@ Run `dev-recapper` after `dev-pathfinder` as the final phase of the completed de
 ## Standard Orchestration Sequence
 
 1. Normalize the input, inspect the workspace when needed, and determine whether this is a new run, a resume, or a manual interrupt.
-2. Spawn the phase subagent and wait for its main artifact or final result.
+2. Resolve `execution_mode` and dispatch the next phase accordingly:
+   - use a subagent when the resolved mode for that phase is `subagents`
+   - otherwise run the phase locally in the main thread
 3. Inspect the returned artifact path or summary, not the entire task from scratch.
 4. Decide the next phase:
    - continue
@@ -297,6 +369,7 @@ Run `dev-recapper` after `dev-pathfinder` as the final phase of the completed de
 - If a phase fails because the prompt was too broad, rerun once with tighter scope.
 - If a phase fails because a required artifact is missing, inspect the workspace, recover the latest relevant artifact if possible, and continue.
 - If the workspace shows strong evidence of a partially completed cycle, prefer resuming from that evidence over restarting earlier phases.
+- If a subagent-dispatched phase fails for execution-mechanism reasons rather than task reasons, rerun that phase locally with the same scope before giving up.
 - If a phase is blocked by a real ambiguity that the AI assistant cannot responsibly infer, stop and ask the user one concise question.
 - Do not silently skip `dev-investigator`, `dev-planner`, or implementation review.
 
@@ -306,6 +379,7 @@ Run `dev-recapper` after `dev-pathfinder` as the final phase of the completed de
 - Do not restart from `dev-investigator` when stronger workspace evidence shows the cycle already progressed further.
 - Do not force `dev-resolver` or `dev-specifier` when they add ceremony without improving decisions.
 - Do not run multiple implementation-capable subagents against overlapping write scopes at the same time.
+- Do not change the workflow order, artifact contract, or review rigor based only on `execution_mode`.
 - Do not treat a dev-planner-created plan as executed until the second `dev-planner` run finishes.
 - Do not end the workflow after implementation without running `dev-reviewer`.
 - Do not run `dev-pathfinder` before the review and implementation loop is complete.

@@ -57,6 +57,7 @@ flowchart TB
 - The workflow only loops through implementation and review again when `dev-reviewer` found blocking issues and the fix pass actually changed code, tests, or runtime configuration in scope.
 - In one completed `dev-supervisor` cycle, `dev-pathfinder` and `dev-recapper` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
 - `dev-supervisor` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
+- `dev-supervisor` supports `execution_mode=auto|local|subagents`, so the same orchestration can run either with phase subagents or entirely in the main thread.
 - When a prior run stopped halfway or the repository already contains manual edits, `dev-supervisor` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
 - Artifacts are primarily emitted under `docs/investigations/...`, `docs/reviews/...`, `docs/walkthroughs/...`, `docs/recaps/...`, `docs/specs/...`, and `docs/plans/...`.
 - `dev-recapper` closes the workflow by summarizing the session, the work performed, and the artifacts produced.
@@ -161,7 +162,7 @@ The uninstall script removes only the skill directories represented by this repo
 `dev-supervisor` is focused on orchestrating the full multi-skill workflow.
 
 - Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap; also recovery of interrupted runs or manual in-flight work
-- Role: keeps the main thread as dev-supervisor, delegates each phase to a subagent when available, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `dev-pathfinder`, and guarantees exactly one `dev-pathfinder` artifact and one `dev-recapper` artifact at the end of each completed cycle
+- Role: keeps the main thread as dev-supervisor, resolves `execution_mode=auto|local|subagents` from exact tokens or clear natural language, documents canonical execution-mode intents in English while still interpreting equivalent phrasing in the user's language semantically, asks one short clarification question when execution-style wording is ambiguous, dispatches each phase through a subagent or locally without changing the workflow contract, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `dev-pathfinder`, and guarantees exactly one `dev-pathfinder` artifact and one `dev-recapper` artifact at the end of each completed cycle
 
 ## License
 
