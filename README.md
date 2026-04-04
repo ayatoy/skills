@@ -12,9 +12,10 @@ This repository contains focused agent skills for engineering work such as inves
 - `dev-walkthrough`: prioritized human reading paths for code and changes
 - `dev-review`: two-pass review of changes or existing code
 - `dev-spec`: software requirements and specification drafting
+- `dev-followup`: sync an existing ExecPlan-led workstream after narrow follow-up changes
 - `dev-recap`: detailed session recap and repeated work pattern analysis
 - `dev-brainstorm`: free-form ideation backed by a living inbox note under `docs/inbox`
-- `dev-orchestrate`: orchestration across the full workflow from investigation through recap, including resume and interrupt handling from existing workspace state
+- `dev-orchestrate`: orchestration across the full workflow from investigation through recap, including resume, interrupt handling, and reopened follow-up mode from existing workspace state
 
 Each skill lives under `skills/` in its own directory and includes a `SKILL.md`, agent config, and supporting references. Use `dev-orchestrate` when you want the full workflow, or call individual skills directly when you need one focused operation. See `Skill Relationships` for the orchestration model and `Skills` for per-skill details.
 
@@ -56,6 +57,8 @@ flowchart TB
 - `dev-review` runs first after implementation; if that review is clean, the workflow proceeds directly to `dev-walkthrough`.
 - The workflow only loops through implementation and review again when `dev-review` found blocking issues and the fix pass actually changed code, tests, or runtime configuration in scope.
 - In one completed `dev-orchestrate` cycle, `dev-walkthrough` and `dev-recap` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
+- After a cycle is complete, later narrow same-workstream changes can reopen the existing workstream in follow-up mode instead of forcing a brand-new cycle from `dev-investigate`.
+- In follow-up mode, `dev-orchestrate` keeps the existing ExecPlan as the primary artifact, runs any needed narrow review or fix loop, then uses `dev-followup` to sync the plan and only the downstream docs justified by propagation rules.
 - `dev-orchestrate` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
 - `dev-orchestrate` supports `execution_mode=auto|local|subagents`, so the same orchestration can run either with phase subagents or entirely in the main thread.
 - When a prior run stopped halfway or the repository already contains manual edits, `dev-orchestrate` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
@@ -143,6 +146,13 @@ The uninstall script removes only the skill directories represented by this repo
 - Use cases: requirement definition, spec drafting, assumption and constraint management
 - Role: converts requests or research into implementation-ready specifications
 
+### dev-followup
+
+`dev-followup` is focused on keeping an existing ExecPlan-led workstream aligned after narrow post-implementation changes.
+
+- Use cases: follow-up fixes, refinements, small behavior tweaks, UI adjustments, and doc synchronization for an already planned or already implemented feature
+- Role: updates exactly one primary ExecPlan in place, refreshes its living sections to match the current implementation and validations, records only commands that were actually run, and updates spec, walkthrough, or recap artifacts only when propagation rules justify it
+
 ### dev-recap
 
 `dev-recap` is focused on preserving the current session as a detailed handoff note.
@@ -161,8 +171,8 @@ The uninstall script removes only the skill directories represented by this repo
 
 `dev-orchestrate` is focused on orchestrating the full multi-skill workflow.
 
-- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap; also recovery of interrupted runs or manual in-flight work
-- Role: keeps the main thread as dev-orchestrate, resolves `execution_mode=auto|local|subagents` from exact tokens or clear natural language, documents canonical execution-mode intents in English while still interpreting equivalent phrasing in the user's language semantically, asks one short clarification question when execution-style wording is ambiguous, dispatches each phase through a subagent or locally without changing the workflow contract, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `dev-walkthrough`, and guarantees exactly one `dev-walkthrough` artifact and one `dev-recap` artifact at the end of each completed cycle
+- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap; recovery of interrupted runs or manual in-flight work; reopening a completed workstream when later narrow follow-up changes arrive
+- Role: keeps the main thread as dev-orchestrate, resolves `execution_mode=auto|local|subagents` from exact tokens or clear natural language, documents canonical execution-mode intents in English while still interpreting equivalent phrasing in the user's language semantically, asks one short clarification question when execution-style wording is ambiguous, dispatches each phase through a subagent or locally without changing the workflow contract, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase or follow-up state from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `dev-walkthrough`, guarantees exactly one `dev-walkthrough` artifact and one `dev-recap` artifact at the end of each completed cycle, and uses `dev-followup` to synchronize the active plan when a completed workstream is reopened in follow-up mode
 
 ## License
 

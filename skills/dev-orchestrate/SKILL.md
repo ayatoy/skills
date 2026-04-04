@@ -1,6 +1,6 @@
 ---
 name: dev-orchestrate
-description: Orchestrate an end-to-end repository workflow across the local skills in this repo. Usually start with `dev-investigate`, then optionally run `dev-resolve` and `dev-spec`, use `dev-plan` to create and execute an ExecPlan, run a `dev-review`-driven fix loop until blocking issues are resolved, then run `dev-walkthrough`, and finish with `dev-recap`. When the workspace already shows in-progress dev-orchestrate artifacts or repository changes, infer the current phase and resume or interrupt from there. Support `execution_mode=auto|local|subagents` so the same workflow can run either with phase subagents or entirely in the main thread.
+description: Orchestrate an end-to-end repository workflow across the local skills in this repo. Usually start with `dev-investigate`, then optionally run `dev-resolve` and `dev-spec`, use `dev-plan` to create and execute an ExecPlan, run a `dev-review`-driven fix loop until blocking issues are resolved, then run `dev-walkthrough`, and finish with `dev-recap`. When a completed workstream later receives narrow follow-up changes, reopen it in follow-up mode, keep the existing plan as the primary artifact, and use `dev-followup` to sync the plan and any justified downstream docs. When the workspace already shows in-progress dev-orchestrate artifacts or repository changes, infer the current phase or follow-up state and resume or interrupt from there. Support `execution_mode=auto|local|subagents` so the same workflow can run either with phase subagents or entirely in the main thread.
 ---
 
 # dev-orchestrate
@@ -9,6 +9,7 @@ Orchestrate a full repository workstream from investigation through implementati
 
 A complete dev-orchestrate cycle always ends with exactly one `dev-walkthrough` run followed by exactly one `dev-recap` run.
 For a completed cycle, each of those phases must produce exactly one main artifact for that cycle.
+After a cycle is complete, later narrow changes may reopen the same workstream in follow-up mode instead of starting a brand-new cycle from `dev-investigate`.
 
 Keep the AI assistant in the main thread as the orchestrator.
 Resolve an execution mode before dispatching any phase work.
@@ -95,6 +96,26 @@ Briefly state the resolved execution mode near the start of the run, for example
 9. `dev-walkthrough`
 10. `dev-recap`
 
+## Follow-up Mode
+
+Use follow-up mode when an existing workstream already has a relevant ExecPlan and the new request is a narrow post-implementation change rather than a fresh project.
+
+Typical signals:
+
+- the user references a previously implemented feature or already-completed orchestration cycle
+- the workspace contains a completed plan plus later code changes in the same feature area
+- the latest walkthrough and recap are already present for the workstream, but the user now wants additional fixes or refinements
+- the new change should mostly reuse the existing plan, review history, and handoff context
+
+In follow-up mode:
+
+1. identify the existing workstream and active ExecPlan
+2. perform any needed narrow implementation or review loop against the follow-up diff
+3. run `dev-followup` to synchronize the active plan with the new reality
+4. update spec, walkthrough, or recap artifacts only when `dev-followup`'s propagation rules justify it
+
+Do not reopen a completed workstream in follow-up mode when the new request is broad enough that it should be treated as a new cycle.
+
 ## Resume And Interrupt Rules
 
 Infer the starting phase from the strongest available evidence, not only from the current prompt.
@@ -119,6 +140,7 @@ Inspect the repository for:
 - whether the newest plan file looks created-only versus partially executed
 - whether a recent review note series exists
 - whether recent `dev-walkthrough` or `dev-recap` notes already exist for the same workstream
+- whether newer implementation changes landed after the most recent walkthrough or recap for that same workstream
 - whether the changed files are mostly workflow artifacts, implementation files, or both
 
 Use modification recency, artifact linkage, filenames, and content cues together.
@@ -140,7 +162,8 @@ In those cases, prefer continuing from the furthest defensible phase already rea
 - If the newest artifact is a spec and there is no newer plan, resume at `dev-plan` plan creation.
 - If the newest artifact is an ExecPlan and repository changes suggest implementation has not started, resume at `dev-plan` execution.
 - If implementation changes and a clean post-review reading path already exist, resume at `dev-recap`.
-- If implementation changes exist but both a final `dev-walkthrough` note and a final recap note already exist for the same workstream, treat that cycle as complete and do not automatically start a new one unless the user asks.
+- If implementation changes exist but both a final `dev-walkthrough` note and a final recap note already exist for the same workstream, enter follow-up mode when the current request or diff is a narrow continuation of that workstream.
+- If implementation changes exist after a completed cycle but the new request is broad, ambiguous, or effectively a new feature, do not force follow-up mode; start a new cycle or ask one concise question if the risk of choosing wrong is material.
 
 Manual user edits are an interrupt, not noise.
 Preserve them, treat them as the latest implementation state, and route the workflow to the next missing orchestration phase.
@@ -170,7 +193,8 @@ Choose the next phase by finding the latest reliable completed milestone:
    - continue with a fix pass when the review has blocking findings
    - otherwise continue with `dev-walkthrough`
 7. If a `dev-walkthrough` artifact exists after the final implementation and review state, continue with `dev-recap`.
-8. If a recap artifact exists after the final `dev-walkthrough` artifact, treat the cycle as complete unless the user asks to extend it.
+8. If a recap artifact exists after the final `dev-walkthrough` artifact, treat the cycle as complete unless the user asks to extend it or newer same-workstream changes clearly indicate follow-up mode.
+9. If a completed cycle later receives narrow same-workstream changes, reopen it in follow-up mode, keep the existing ExecPlan as the active plan, and run `dev-followup` after any needed narrow implementation or review loop.
 
 When evidence conflicts, prefer the interpretation that preserves user work and requires the fewest repeated phases.
 If two interpretations are equally plausible and choosing the wrong one would risk overwriting or misreviewing user changes, ask one concise question.
@@ -180,6 +204,7 @@ If two interpretations are equally plausible and choosing the wrong one would ri
 The AI assistant in the main thread is responsible for:
 
 - deciding the current phase
+- deciding whether the work belongs to the main cycle or a reopened follow-up mode
 - resolving the execution mode
 - inferring whether the workspace reflects a fresh request, a paused dev-orchestrate cycle, or a manual interrupt
 - spawning and coordinating subagents when the resolved execution mode uses them
@@ -187,9 +212,11 @@ The AI assistant in the main thread is responsible for:
 - passing the minimum necessary context to each phase
 - collecting artifact paths and key outcomes
 - keeping track of the active ExecPlan path once `dev-plan` has created or selected it
+- preserving the active ExecPlan path when follow-up mode reopens a completed workstream
 - deciding whether optional phases should run or be skipped
 - handling retries or fallbacks
 - ensuring implementation work that changes the repository is reflected back into the active ExecPlan
+- ensuring follow-up implementation work is synchronized back into the active plan through `dev-followup`
 - preserving user-created changes and incorporating them into the inferred workflow state instead of discarding them
 - giving the user a concise final summary
 - ensuring saved artifacts produced by downstream skills never expose machine-specific filesystem absolute paths and use `$PWD/...` placeholders when a workspace-rooted path must appear in prose
@@ -236,6 +263,7 @@ If a required phase cannot run in a subagent, say so briefly and fall back to a 
 - Run `dev-walkthrough` exactly once after the review and implementation loop is complete.
 - Run `dev-recap` exactly once after `dev-walkthrough`, as the final phase of a completed dev-orchestrate cycle.
 - Do not create multiple main `dev-walkthrough` artifacts or multiple main `dev-recap` artifacts for one completed dev-orchestrate cycle.
+- In follow-up mode, dispatch `dev-followup` after the narrow implementation state is stable, and rerun `dev-walkthrough` or `dev-recap` only when the follow-up propagation decision says they are needed.
 
 ## Phase Selection Rules
 
@@ -321,6 +349,17 @@ After implementation, run `dev-review` against the implementation diff unless th
 - Non-blocking findings, residual risks, and speculative questions do not require another implementation pass unless the user asks for it.
 - Each rerun of `dev-review` should produce a new review artifact that continues the prior review artifact's filename series.
 
+### 6b. Follow-up Synchronization
+
+Run `dev-followup` when the workflow is in follow-up mode and the current implementation state should be reflected back into the active workstream artifacts.
+
+- Pass the active ExecPlan path as the primary input.
+- Pass any explicitly relevant spec, walkthrough, or recap artifacts only when they may need propagation.
+- Treat the plan as the primary artifact and do not let downstream doc churn displace it.
+- Require `dev-followup` to update only the downstream artifacts justified by its propagation rules.
+- If the follow-up changed code, tests, or runtime behavior, prefer running `dev-followup` after the narrow implementation or review loop has settled.
+- If the follow-up changed only docs or only clarified status, `dev-followup` may run without a new review pass.
+
 ### 7. Walkthrough
 
 Run `dev-walkthrough` only after the review and implementation loop is complete.
@@ -352,13 +391,15 @@ Run `dev-recap` after `dev-walkthrough` as the final phase of the completed dev-
    - skip an optional phase
    - retry once with tighter instructions
    - stop on a real blocker
-5. After implementation, run `dev-review`.
-6. If `dev-review` finds no blocking issues, stop the review loop immediately and continue to `dev-walkthrough`.
-7. If `dev-review` finds blocking issues that should be fixed now, run a narrow implementation pass; only rerun `dev-review` when that pass changed code, tests, or runtime configuration in scope, and update the active ExecPlan before the rerun when repository changes were made.
-8. Repeat step 7 until no blocking findings remain or a real blocker prevents further safe changes.
-9. Run `dev-walkthrough` exactly once on the final post-loop implementation state.
-10. Run `dev-recap` exactly once after `dev-walkthrough`.
-11. Return a concise summary with:
+5. If the run is a fresh or in-progress main cycle, continue through implementation, `dev-review`, `dev-walkthrough`, and `dev-recap` in the normal order.
+6. If the run is in follow-up mode and code, tests, or runtime configuration changed, run `dev-review` against the follow-up diff.
+7. If that follow-up review finds blocking issues, run a narrow implementation pass and rerun `dev-review` only when the follow-up fix changed in-scope code, tests, or runtime configuration.
+8. Once the follow-up implementation state is stable, run `dev-followup` to synchronize the active ExecPlan and any justified downstream artifacts.
+9. In follow-up mode, rerun `dev-walkthrough` only when the reading path materially changed or the user asked for it.
+10. In follow-up mode, rerun `dev-recap` only when current status, unresolved risk, or handoff context materially changed.
+11. In the main cycle, run `dev-walkthrough` exactly once on the final post-loop implementation state.
+12. In the main cycle, run `dev-recap` exactly once after `dev-walkthrough`.
+13. Return a concise summary with:
    - completed phases
    - skipped phases
    - created or updated artifacts
@@ -388,11 +429,15 @@ Run `dev-recap` after `dev-walkthrough` as the final phase of the completed dev-
 - Do not ignore a blocking review finding that the AI assistant can safely fix in the current workflow.
 - Do not rerun `dev-review` after a clean review or after a no-op fix pass.
 - Do not lose the artifact chain; always know which note, spec, and plan the current phase is based on.
+- Do not start a brand-new orchestration cycle for a narrow same-workstream follow-up unless the user clearly wants that reset.
+- Do not rerun `dev-walkthrough` or `dev-recap` automatically for every follow-up; let `dev-followup` propagation rules decide.
+- Do not treat a follow-up walkthrough or recap refresh as a second full completion pass for the original cycle; treat it as a targeted same-workstream update.
 
 ## Quality Bar
 
 - The workflow should feel like a well-orchestrated pipeline, not a loose checklist.
 - Resume and interrupt decisions should be conservative, artifact-aware, and biased toward preserving already completed work.
+- Follow-up mode should feel lighter than a full new cycle while still preserving review rigor and plan fidelity.
 - Each downstream phase should consume concrete upstream artifacts whenever possible.
 - Optional phases should be skipped deliberately, not forgotten.
 - The final summary should let the user see what happened, what was created, and what still needs attention.
