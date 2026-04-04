@@ -1,4 +1,0 @@
-interface:
-  display_name: "dev-reviewer"
-  short_description: "Run a two-pass code review and save the result under $PWD/docs/reviews"
-  default_prompt: "Use $dev-reviewer to review the current changes, or a feature or code area, in two passes: first find concrete issues, then check intent, security, regression risk, tests, operations, and AI readability. Before reviewing, always inspect prior review artifacts for the same target and use them as the deduplication baseline. Save the review as a markdown note under $PWD/docs/reviews with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix, continue the same-target filename series when one exists, and only emit net-new findings or material status changes instead of repeating older findings. Use the same UTC format for any created or updated timestamp written inside the artifact."

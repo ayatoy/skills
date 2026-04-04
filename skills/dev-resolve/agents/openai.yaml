@@ -1,0 +1,4 @@
+interface:
+  display_name: "dev-resolve"
+  short_description: "Append best-effort inferred answers to open questions in documents or free-form text"
+  default_prompt: "Use $dev-resolve to find open questions in the provided document or text and append the strongest defensible inferred answers, clearly labeled with confidence and basis."

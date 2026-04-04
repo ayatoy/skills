@@ -1,0 +1,4 @@
+interface:
+  display_name: "dev-spec"
+  short_description: "Draft a specification from a dev-investigate report or request and save it to $PWD/docs/specs"
+  default_prompt: "Use $dev-spec to draft a specification from the provided dev-investigate report, or from my request plus supporting context, and save it under $PWD/docs/specs with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix. Use the same UTC format for any created or updated timestamp written inside the artifact."
