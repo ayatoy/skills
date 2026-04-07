@@ -1,6 +1,6 @@
 ---
 name: dev-followup
-description: Sync an existing ExecPlan-led workstream after post-implementation follow-up changes. Use when a completed or in-flight feature receives narrow fixes or refinements and the active plan and adjacent docs must be brought back in line with the current code, validation, and decisions.
+description: Sync an existing ExecPlan-led workstream after post-implementation follow-up changes. Use when a completed or in-flight feature receives narrow fixes or refinements and the active plan and adjacent docs must be brought back in line with the current code, validation, and decisions. Use only for extended workstreams whose source of truth is an ExecPlan, not for lightweight execution-brief follow-up.
 ---
 
 # dev-followup
@@ -8,6 +8,9 @@ description: Sync an existing ExecPlan-led workstream after post-implementation 
 Keep a previously planned workstream aligned with reality after follow-up implementation changes.
 
 This skill is for the phase after the main feature implementation already exists. It assumes there is an existing ExecPlan or a clearly identifiable workstream under `$PWD/docs/plans`.
+
+This is the heavyweight follow-up path.
+If the workstream is being tracked only by an execution brief, resume it in `dev-orchestrate` instead of invoking `dev-followup`.
 
 ## Use Cases
 
@@ -23,6 +26,7 @@ Do not use `dev-followup` for:
 - creating the first plan for a new workstream
 - broad greenfield implementation from a free-form request
 - writing a session recap from scratch when there is no follow-up implementation context
+- lightweight execution-brief follow-up that does not have an active ExecPlan
 
 If no valid target ExecPlan exists, stop and hand off to `dev-plan`.
 

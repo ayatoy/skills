@@ -1,4 +1,4 @@
 interface:
   display_name: "dev-plan"
-  short_description: "Create, revise, and execute ExecPlans in $PWD/docs/plans"
-  default_prompt: "Use $dev-plan to create, update, or execute an ExecPlan for this repository following references/PLANS.md. Accept free-form requests, dev-investigate/dev-spec documents, or an existing ExecPlan, and keep plan files under $PWD/docs/plans with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix. Use the same UTC format for any created or updated timestamp written inside the artifact."
+  short_description: "Heavyweight ExecPlan workflow for extended, restartable workstreams"
+  default_prompt: "Use $dev-plan to create, update, or execute a heavyweight ExecPlan for this repository only when the task is extended enough to justify a self-contained plan. Follow references/PLANS.md, keep plan files under $PWD/docs/plans with a UTC yyyy-MM-dd'T'HH-mm-ss'Z' filename prefix, avoid using an ExecPlan when a lighter execution-brief flow would be enough, and promote accepted architecture-level decisions into ADRs under $PWD/docs/adr with the same UTC filename-prefix rule."

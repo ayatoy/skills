@@ -1,4 +1,4 @@
 interface:
   display_name: "dev-followup"
   short_description: "Sync an existing ExecPlan-led workstream after narrow follow-up implementation changes"
-  default_prompt: "Use $dev-followup to update the active ExecPlan for an existing workstream after follow-up fixes or refinements. Treat the plan as the primary artifact, update its living sections to match the current implementation, record only validation commands that were actually run, and update spec, walkthrough, or recap artifacts only when the propagation rules justify it."
+  default_prompt: "Use $dev-followup only for an extended ExecPlan-led workstream after follow-up fixes or refinements. Treat the plan as the primary artifact, update its living sections to match the current implementation, record only validation commands that were actually run, and update spec, walkthrough, or recap artifacts only when the propagation rules justify it."

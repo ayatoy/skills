@@ -1,56 +1,62 @@
 ---
 name: dev-orchestrate
-description: Orchestrate an end-to-end repository workflow across the local skills in this repo. Usually start with `dev-investigate`, then optionally run `dev-resolve` and `dev-spec`, use `dev-plan` to create and execute an ExecPlan, run a `dev-review`-driven fix loop until blocking issues are resolved, then run `dev-walkthrough`, and finish with `dev-recap`. When a completed workstream later receives narrow follow-up changes, reopen it in follow-up mode, keep the existing plan as the primary artifact, and use `dev-followup` to sync the plan and any justified downstream docs. When the workspace already shows in-progress dev-orchestrate artifacts or repository changes, infer the current phase or follow-up state and resume or interrupt from there. Support `execution_mode=auto|local|subagents` so the same workflow can run either with phase subagents or entirely in the main thread.
+description: Run an autonomous repository implementation workflow with minimal human intervention. Use when the user wants the agent to take an issue, bug, feature, or change request from intake through focused repository recon, compact planning, implementation, review, validation, and completion with as little user interaction as possible. Default to a lightweight local-first flow and escalate to `dev-investigate`, `dev-spec`, `dev-plan`, `dev-followup`, `dev-walkthrough`, or `dev-recap` only when task risk, ambiguity, or handoff needs justify the extra ceremony. When architecture-level decisions become stable, promote them from local decision notes into ADR artifacts under `$PWD/docs/adr/`.
 ---
 
 # dev-orchestrate
 
-Orchestrate a full repository workstream from investigation through implementation review and session recap.
+Run a low-ceremony implementation workflow that optimizes for autonomous completion rate, not for producing every possible artifact.
 
-A complete dev-orchestrate cycle always ends with exactly one `dev-walkthrough` run followed by exactly one `dev-recap` run.
-For a completed cycle, each of those phases must produce exactly one main artifact for that cycle.
-After a cycle is complete, later narrow changes may reopen the same workstream in follow-up mode instead of starting a brand-new cycle from `dev-investigate`.
+Keep the agent in the main thread as the orchestrator.
+Default to a local-first execution style.
+Use downstream skills only when they materially reduce failure risk.
 
-Keep the AI assistant in the main thread as the orchestrator.
-Resolve an execution mode before dispatching any phase work.
+## Primary Goal
+
+Take a repository task from request to completed implementation with the smallest workflow that still protects against:
+
+- solving the wrong problem
+- missing an important constraint
+- shipping an obvious regression
+- stopping in an unrecoverable intermediate state
+
+Treat `dev-orchestrate` as a router plus checkpoint manager, not as a mandatory full documentation pipeline.
 
 ## Inputs
 
-- No explicit input, in which case inspect the workspace and infer whether a dev-orchestrate cycle is already in progress
-- A free-form request describing a problem, goal, bug, feature, or investigation topic
-- Or an existing artifact path to resume from:
+- a free-form issue, bug, feature, or implementation request
+- an existing artifact path such as:
+  - `$PWD/docs/adr/...`
   - `$PWD/docs/investigations/...`
-  - `$PWD/docs/reviews/...`
-  - `$PWD/docs/walkthroughs/...`
-  - `$PWD/docs/recaps/...`
   - `$PWD/docs/specs/...`
   - `$PWD/docs/plans/...`
-- Or an already-dirty repository state, including manual user edits, staged changes, or partially completed dev-orchestrate artifacts
-- Optional constraints:
-  - stop after a named phase
+  - `$PWD/docs/reviews/...`
+  - `$PWD/docs/execution-briefs/...`
+- a dirty repository state that should be resumed or stabilized
+- optional constraints:
+  - `execution_mode=auto|local|subagents`
+  - stop after a named gate
   - resume from a named phase
-  - execution mode
-  - language
   - timebox
+  - language
 
-When the user provides a `.md` file path or pasted markdown as source material for the workflow, pass that markdown artifact through to the next phase as the primary input instead of paraphrasing it into a shorter surrogate.
+When the user provides a `.md` file path or pasted markdown, treat that artifact as the primary input instead of paraphrasing it into a weaker surrogate.
 
-## Execution Mode Selection
+## Execution Modes
 
-`dev-orchestrate` supports `execution_mode` values:
+Resolve execution mode before doing substantial work.
 
-- `auto`: default behavior; use phase subagents when available, otherwise run locally in the main thread
-- `local`: do not use `spawn_agent`; run each phase locally in the main thread in the same workflow order
-- `subagents`: use a separate subagent for each phase unless a real platform limitation prevents it
-
-Users may specify the mode either with an exact token such as `execution_mode=local` or natural language such as:
-
-- `no subagents`
-- `run locally`
-- `main thread only`
-- `use subagents`
-
-Document canonical execution-mode intents in English, but interpret the user's actual language semantically.
+- `auto`
+  - default mode
+  - run the core loop locally in the main thread
+  - use subagents only for isolated sidecar work such as independent investigation, narrow validation, or other non-blocking tasks
+- `local`
+  - do not call `spawn_agent`
+  - run everything in the main thread
+- `subagents`
+  - still keep orchestration decisions in the main thread
+  - delegate only well-scoped, non-overlapping phase work or sidecar tasks
+  - do not delegate every phase by reflex
 
 Treat intents like these as valid signals for `local`:
 
@@ -62,382 +68,394 @@ Treat intents like these as valid signals for `local`:
 Treat intents like these as valid signals for `subagents`:
 
 - `use subagents`
-- `delegate each phase`
+- `delegate this`
 - `run this with subagents`
-- `use the normal delegated flow`
 
-Treat vague phrases like these as insufficient on their own:
+If the user does not specify a mode, default to `auto`.
+Briefly state the resolved execution mode near the start of the run.
 
-- `keep it simple`
-- `just do it`
-- `go ahead`
-- `use the usual approach`
+## Task Classes
 
-Interpret the user's wording by intent rather than exact phrase matching.
-Treat the English examples above as representative phrases, not the only accepted wording.
-Interpret equivalent phrasing in the user's language semantically rather than requiring exact trigger phrases.
-Minor wording differences, tense differences, and polite phrasing should not matter.
-Ambiguous phrasing should still be treated as ambiguous even if it contains words like `local`, `delegate`, `subagent`, or `main thread`.
-When the user's wording suggests a preference about execution style but does not clearly resolve to `local` or `subagents`, ask one short clarification question before switching modes.
-If multiple explicit mode directives conflict, honor the last explicit one.
-If no explicit mode is given, default to `auto`.
-Briefly state the resolved execution mode near the start of the run, for example `Execution mode: local`.
+Classify the task early. The class decides how much ceremony is justified.
 
-## Default Workflow
+### `fast`
 
-1. `dev-investigate`
-2. optional `dev-resolve` when major unresolved questions would destabilize later decisions
-3. `dev-spec` when a separable spec would materially improve execution
-4. `dev-plan` to create or update an ExecPlan
-5. `dev-plan` again to execute the ExecPlan
-6. `dev-review`
-7. implementation fix pass when the review finds blocking issues that should be fixed now
-8. repeat `dev-review` and implementation until blocking issues are resolved or a real blocker remains
-9. `dev-walkthrough`
-10. `dev-recap`
-
-## Follow-up Mode
-
-Use follow-up mode when an existing workstream already has a relevant ExecPlan and the new request is a narrow post-implementation change rather than a fresh project.
+Use for work that is narrow, low-risk, and easy to validate.
 
 Typical signals:
 
-- the user references a previously implemented feature or already-completed orchestration cycle
-- the workspace contains a completed plan plus later code changes in the same feature area
-- the latest walkthrough and recap are already present for the workstream, but the user now wants additional fixes or refinements
-- the new change should mostly reuse the existing plan, review history, and handoff context
+- one small bug fix
+- one localized behavior tweak
+- obvious target files
+- no contract, schema, or interface change
 
-In follow-up mode:
-
-1. identify the existing workstream and active ExecPlan
-2. perform any needed narrow implementation or review loop against the follow-up diff
-3. run `dev-followup` to synchronize the active plan with the new reality
-4. update spec, walkthrough, or recap artifacts only when `dev-followup`'s propagation rules justify it
-
-Do not reopen a completed workstream in follow-up mode when the new request is broad enough that it should be treated as a new cycle.
-
-## Resume And Interrupt Rules
-
-Infer the starting phase from the strongest available evidence, not only from the current prompt.
-
-Use this precedence order:
-
-1. explicit user override such as `resume from dev-review` or `stop after dev-plan`
-2. strongest workspace evidence from the current repository state
-3. strongest artifact the user provides directly
-4. free-form request intent
-
-When there is no explicit input, or when the repository already has relevant uncommitted changes, inspect the workspace before defaulting to `dev-investigate`.
-Treat pre-existing repository changes as a likely interrupted or manually advanced workflow and resume from the inferred current phase instead of restarting the pipeline from scratch.
-
-### Workspace State Inspection
-
-Inspect the repository for:
-
-- uncommitted changes in tracked or untracked files
-- the newest artifacts under `$PWD/docs/investigations`, `$PWD/docs/reviews`, `$PWD/docs/walkthroughs`, `$PWD/docs/recaps`, `$PWD/docs/specs`, and `$PWD/docs/plans`
-- when needed for resume compatibility, the newest legacy artifacts under `$PWD/docs/notes`
-- whether the newest plan file looks created-only versus partially executed
-- whether a recent review note series exists
-- whether recent `dev-walkthrough` or `dev-recap` notes already exist for the same workstream
-- whether newer implementation changes landed after the most recent walkthrough or recap for that same workstream
-- whether the changed files are mostly workflow artifacts, implementation files, or both
+Default flow:
 
-Use modification recency, artifact linkage, filenames, and content cues together.
-Do not rely on timestamps alone when filenames or note contents indicate a clearer ordering.
+1. focused recon
+2. implement
+3. review gate
+4. validation gate
 
-### Dirty Repository Heuristic
+### `standard`
 
-If the repository is dirty before the dev-orchestrate starts, assume one of these first:
+Use for ordinary engineering work. This is the default.
 
-- an earlier dev-orchestrate run stopped after or during implementation
-- the user manually continued the work outside `dev-orchestrate`
-- the user is intentionally interrupting the normal flow with manual edits
-
-In those cases, prefer continuing from the furthest defensible phase already reached.
-
-- If code or test files changed and no review note exists yet, resume at `dev-review`.
-- If code or test files changed and the newest review note contains blocking findings that match the current diff, resume with a narrow implementation pass, then rerun `dev-review`.
-- If only workflow artifacts changed and the newest artifact is an investigation note, resume from `dev-resolve`, `dev-spec`, or `dev-plan` as appropriate.
-- If the newest artifact is a spec and there is no newer plan, resume at `dev-plan` plan creation.
-- If the newest artifact is an ExecPlan and repository changes suggest implementation has not started, resume at `dev-plan` execution.
-- If implementation changes and a clean post-review reading path already exist, resume at `dev-recap`.
-- If implementation changes exist but both a final `dev-walkthrough` note and a final recap note already exist for the same workstream, enter follow-up mode when the current request or diff is a narrow continuation of that workstream.
-- If implementation changes exist after a completed cycle but the new request is broad, ambiguous, or effectively a new feature, do not force follow-up mode; start a new cycle or ask one concise question if the risk of choosing wrong is material.
-
-Manual user edits are an interrupt, not noise.
-Preserve them, treat them as the latest implementation state, and route the workflow to the next missing orchestration phase.
-
-- If the input is mainly a free-form request and there is no stronger workspace evidence, start with `dev-investigate`.
-- If the input is a note under `$PWD/docs/investigations`, `$PWD/docs/reviews`, `$PWD/docs/walkthroughs`, `$PWD/docs/recaps`, or legacy `$PWD/docs/notes`, classify it before resuming:
-  - treat it as an investigation note when it matches `dev-investigate`-style sections such as `Topic and scope`, `Findings`, or `Open questions and risks`
-  - treat it as a review note when it matches `dev-review`-style sections such as `Findings`, `Open questions / assumptions`, or `Residual risks`
-  - treat it as a walkthrough note when it matches `dev-walkthrough`-style sections such as `Target`, `Mode`, `Start here`, or `Path`
-  - treat it as a recap note when it matches `dev-recap`-style sections such as `Session chronology`, `Current status`, or `Repeated work patterns`
-  - do not automatically resume the main workflow from dev-review, dev-walkthrough, or recap notes; use them as downstream context only unless the user explicitly names the next phase
-- If the input is an investigation note, start from `dev-resolve` or `dev-spec`, then continue forward.
-- If the input is a spec under `$PWD/docs/specs`, start from `dev-plan`.
-- If the input is an ExecPlan under `$PWD/docs/plans`, start from `dev-plan` execution.
-- If the user explicitly names a phase, respect that unless it would skip required upstream context.
-
-### Phase Inference Checklist
-
-Choose the next phase by finding the latest reliable completed milestone:
-
-1. If no relevant artifacts or changes exist, start with `dev-investigate`.
-2. If an investigation artifact exists but no plan-driving artifact exists after it, continue with `dev-resolve`, `dev-spec`, or `dev-plan`.
-3. If a spec exists and no newer ExecPlan exists, continue with `dev-plan` plan creation.
-4. If an ExecPlan exists but there is no evidence of implementation changes after it, continue with `dev-plan` execution.
-5. If implementation changes exist but no review artifact exists after those changes, continue with `dev-review`.
-6. If a review artifact exists after the latest implementation changes:
-   - continue with a fix pass when the review has blocking findings
-   - otherwise continue with `dev-walkthrough`
-7. If a `dev-walkthrough` artifact exists after the final implementation and review state, continue with `dev-recap`.
-8. If a recap artifact exists after the final `dev-walkthrough` artifact, treat the cycle as complete unless the user asks to extend it or newer same-workstream changes clearly indicate follow-up mode.
-9. If a completed cycle later receives narrow same-workstream changes, reopen it in follow-up mode, keep the existing ExecPlan as the active plan, and run `dev-followup` after any needed narrow implementation or review loop.
+Typical signals:
 
-When evidence conflicts, prefer the interpretation that preserves user work and requires the fewest repeated phases.
-If two interpretations are equally plausible and choosing the wrong one would risk overwriting or misreviewing user changes, ask one concise question.
+- a normal feature or bug that spans a few files
+- some uncertainty about the right fix
+- non-trivial tests or validation
+- moderate regression risk
 
-## Orchestrator Responsibilities
+Default flow:
 
-The AI assistant in the main thread is responsible for:
+1. intake
+2. focused recon
+3. compact execution brief
+4. implement
+5. review gate
+6. fix loop if needed
+7. validation gate
+8. close
 
-- deciding the current phase
-- deciding whether the work belongs to the main cycle or a reopened follow-up mode
-- resolving the execution mode
-- inferring whether the workspace reflects a fresh request, a paused dev-orchestrate cycle, or a manual interrupt
-- spawning and coordinating subagents when the resolved execution mode uses them
-- performing the phase locally when the resolved execution mode is `local` or when `auto` falls back locally
-- passing the minimum necessary context to each phase
-- collecting artifact paths and key outcomes
-- keeping track of the active ExecPlan path once `dev-plan` has created or selected it
-- preserving the active ExecPlan path when follow-up mode reopens a completed workstream
-- deciding whether optional phases should run or be skipped
-- handling retries or fallbacks
-- ensuring implementation work that changes the repository is reflected back into the active ExecPlan
-- ensuring follow-up implementation work is synchronized back into the active plan through `dev-followup`
-- preserving user-created changes and incorporating them into the inferred workflow state instead of discarding them
-- giving the user a concise final summary
-- ensuring saved artifacts produced by downstream skills never expose machine-specific filesystem absolute paths and use `$PWD/...` placeholders when a workspace-rooted path must appear in prose
+### `extended`
 
-The main thread should not duplicate the deep work already delegated to a subagent unless that delegation clearly failed.
-- Ensure every saved artifact and user-facing deliverable produced by downstream skills matches the user's language unless the user asks otherwise.
+Use only when the work is broad enough that a compact loop is not safe enough.
 
-## Execution Strategy
+Typical signals:
 
-The workflow phases, artifact contracts, review loop, and completion criteria do not change across execution modes.
-Only the phase execution mechanism changes.
+- API, CLI, schema, workflow, or user-visible contract changes
+- migrations, broad refactors, or multi-milestone work
+- high uncertainty about architecture or root cause
+- strong need for restartability or handoff-quality artifacts
 
-### `auto`
+Extended flow may invoke `dev-investigate`, `dev-spec`, `dev-plan`, or `dev-followup`.
+Do not enter `extended` mode just because the task sounds important.
 
-Use subagents by default for every phase when `spawn_agent` is available.
-If subagents are unavailable or clearly unsuitable for the current phase, run that phase locally in the same order and say so briefly.
+## Core Artifact: Execution Brief
 
-### `local`
+For `standard` work, prefer one compact execution brief under:
 
-Do not call `spawn_agent`.
-Run each phase directly in the main thread in the same order, using the same upstream artifacts and acceptance criteria that would apply to a delegated phase.
-Do not weaken the workflow just because the run is local.
+- `$PWD/docs/execution-briefs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 
-### `subagents`
+Keep it short, usually 10 to 30 lines.
+Use it as the state checkpoint for the current run.
+When an ExecPlan already exists and should remain the source of truth, do not create a competing execution brief.
 
-Use a separate subagent for each work phase unless a real platform limitation prevents it.
-If a required phase cannot run in a subagent, say so briefly and fall back to a local run for that phase rather than abandoning the workflow.
+Use [references/EXECUTION_BRIEF_TEMPLATE.md](references/EXECUTION_BRIEF_TEMPLATE.md) as the starting shape.
 
-### Subagent Dispatch Rules
+The execution brief should contain only:
 
-- Spawn one subagent per phase.
-- Use `fork_context=true` unless isolation is clearly better.
-- In the subagent prompt, explicitly invoke the target skill by name, for example `Use $dev-investigate ...` or `Use $dev-plan ...`, so the intended skill actually triggers.
-- When delegating from a user-provided `.md` document, pass the original document path or pasted markdown through directly and state that it is the primary input; do not replace it with a dev-orchestrate-authored summary unless the user explicitly asks for one.
-- Give each subagent a narrow task with:
-  - the phase name
-  - the exact user goal
-  - the artifact paths it should use
-  - the expected output
-- Pass the user's language expectation explicitly when it affects saved artifacts or user-facing deliverables.
-- Pass the artifact path redaction rule explicitly when a phase will save or edit markdown: never emit local filesystem absolute paths such as `/Users/...`; use `$PWD/...` placeholders or repo-local relative links instead.
-- Keep write phases sequential when they may touch the same artifact.
-- `dev-review` is read-only, but the dev-orchestrate may schedule a write-capable fix pass between review iterations.
-- Run `dev-walkthrough` exactly once after the review and implementation loop is complete.
-- Run `dev-recap` exactly once after `dev-walkthrough`, as the final phase of a completed dev-orchestrate cycle.
-- Do not create multiple main `dev-walkthrough` artifacts or multiple main `dev-recap` artifacts for one completed dev-orchestrate cycle.
-- In follow-up mode, dispatch `dev-followup` after the narrow implementation state is stable, and rerun `dev-walkthrough` or `dev-recap` only when the follow-up propagation decision says they are needed.
+- goal
+- acceptance
+- constraints
+- scope
+- evidence index
+- planned edits
+- decisions
+- validation plan
+- current status
+- open risks
 
-## Phase Selection Rules
+Do not turn the execution brief into a long narrative report.
 
-### 1. Investigate
+## Architecture Decision Records
 
-This is the default entry point.
+Use ADRs only for decisions that outlive the current task.
 
-- Always run `dev-investigate` first unless the user provided a stronger resume artifact.
-- Expect one main report under `$PWD/docs/investigations/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
-- Use that report as the canonical source for downstream phases.
+Create ADRs under:
 
-### 2. Resolve
+- `$PWD/docs/adr/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`
 
-`dev-resolve` is optional.
-Run it only when leaving the open questions unresolved would materially weaken planning or implementation decisions.
+Use the same UTC prefix rule used by the other saved artifacts.
+If the ADR body includes any created or updated timestamp, use the same `UTC` format `yyyy-MM-dd'T'HH-mm-ss'Z'`.
+Use [references/ADR_TEMPLATE.md](references/ADR_TEMPLATE.md) as the starting shape.
 
-Typical triggers:
+Create or update an ADR only when the decision is architecture-level, meaning most of these are true:
 
-- the investigation note has large open questions, unknowns, or risks that could change architecture, scope, or execution order
-- the unresolved questions are important enough that plan quality or implementation direction would likely drift without a best-effort answer
-- the report contains major decision forks that should be collapsed before planning
+- it affects multiple files, modules, or workstreams
+- it changes a long-lived API, CLI, schema, workflow, or boundary
+- there were real alternatives worth considering
+- future engineers are likely to ask why this path was chosen
+- the decision may later be reversed, superseded, or refined
 
-Skip `dev-resolve` when the remaining unknowns are minor, clearly non-blocking, or already resolved enough that planning and implementation can proceed without meaningful drift.
+Do not create ADRs for local refactors, obvious bug fixes, naming choices, or one-off implementation details.
 
-### 3. Spec
+ADR workflow:
 
-`dev-spec` is optional.
+1. record the active task-local decision first in the execution brief or ExecPlan
+2. search `$PWD/docs/adr` for an existing ADR that already covers the same decision space
+3. if the decision is new and stable enough, create one ADR file for that single decision
+4. if the decision changes or replaces an earlier ADR, update the earlier ADR status and cross-link the replacement
+5. link the ADR back from the execution brief or ExecPlan so the task-local artifact and the long-lived record stay connected
 
-Use it when the work would benefit from an explicit spec, for example:
+## Resume And Source Of Truth Rules
 
-- new features
-- behavior changes with user-facing impact
-- API, CLI, schema, workflow, or contract changes
-- work with multiple plausible implementations where a crisp requirement boundary helps
-
-Skip it for narrow bug fixes, small local refactors, and execution work that is already well-scoped by the investigation note.
-
-### 4. Plan Creation
-
-Run `dev-plan` to create or update an ExecPlan using:
-
-- the investigation note
-- the resolved note if `dev-resolve` edited it or produced a sibling file
-- the spec if one exists
-
-Expect one primary ExecPlan under `$PWD/docs/plans/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
-
-### 5. Plan Execution
-
-After plan creation, run `dev-plan` again to execute the plan.
-
-Important:
-
-- Pass the exact ExecPlan file path as the primary input to the second `dev-plan` run.
-- This satisfies `dev-plan`'s explicit execution rule; do not rely on vague approval text.
-- In `subagents` mode, keep the main thread focused on orchestration while the dev-plan execution subagent performs the implementation.
-- In `local` mode, execute the same plan in the main thread without changing the plan's scope or acceptance bar.
-- Treat the ExecPlan selected here as the active plan file for the rest of the dev-orchestrate cycle.
-
-### 6. Review
-
-After implementation, run `dev-review` against the implementation diff unless the user specified a narrower target.
-
-- Prefer `change-review`.
-- Default review scope to code, tests, and runtime configuration changed by the implementation phase.
-- Exclude workflow artifacts such as notes, specs, and plan-file churn unless the user explicitly wants them reviewed or they are the only meaningful changes.
-- When invoking `dev-review`, pass an explicit target rooted in the implementation diff; do not ask it to inspect the whole dirty working tree when review artifacts were just created.
-- Require `dev-review` to inspect the latest same-target review artifact before each pass and use it as the deduplication baseline.
-- Expect one main markdown review note under `$PWD/docs/reviews/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
-- Treat findings as primary output.
-- Capture any unresolved questions or testing gaps for the final summary.
-- Require each rerun to record only net-new findings or material status deltas; unchanged prior findings should remain in the earlier review artifact instead of being repeated.
-- If the first post-implementation review has no blocking findings, end the review loop immediately and continue to `dev-walkthrough`; do not rerun `dev-review` just to reconfirm a clean result.
-- If the review surfaces blocking, high-confidence findings that should be fixed now, enter a review and implementation loop:
-  - extract the concrete findings that require changes
-  - run a narrowly scoped implementation pass to fix them
-  - rerun `dev-review` only when that fix pass changed code, tests, or runtime configuration inside the review scope
-  - if that fix implementation changes the repository, append the work performed to the active ExecPlan before rerunning `dev-review`
-  - rerun `dev-review` on the updated implementation diff, not on the full dirty tree
-  - continue until no blocking findings remain or a real blocker prevents a safe fix
-- If the attempted fix pass is a no-op or touches only workflow artifacts, do not rerun `dev-review`; carry the blocker or remaining risk into the final summary instead.
-- Treat correctness, security, data loss, crash, obvious regression, and equivalent P0 or P1 issues as blocking by default.
-- Non-blocking findings, residual risks, and speculative questions do not require another implementation pass unless the user asks for it.
-- Each rerun of `dev-review` should produce a new review artifact that continues the prior review artifact's filename series.
-
-### 6b. Follow-up Synchronization
-
-Run `dev-followup` when the workflow is in follow-up mode and the current implementation state should be reflected back into the active workstream artifacts.
-
-- Pass the active ExecPlan path as the primary input.
-- Pass any explicitly relevant spec, walkthrough, or recap artifacts only when they may need propagation.
-- Treat the plan as the primary artifact and do not let downstream doc churn displace it.
-- Require `dev-followup` to update only the downstream artifacts justified by its propagation rules.
-- If the follow-up changed code, tests, or runtime behavior, prefer running `dev-followup` after the narrow implementation or review loop has settled.
-- If the follow-up changed only docs or only clarified status, `dev-followup` may run without a new review pass.
-
-### 7. Walkthrough
-
-Run `dev-walkthrough` only after the review and implementation loop is complete.
-
-- Prefer `review` mode for diffs.
-- Use the final post-fix implementation state as the input scope.
-- Optimize for the code-reading path first; include workflow artifacts only when they clarify behavior or user intent.
-- Optimize for the user's own follow-up reading and verification path.
-- Expect one main markdown reading-path note under `$PWD/docs/walkthroughs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md`.
-- Run this phase exactly once per completed dev-orchestrate cycle.
-
-### 8. Recap
-
-Run `dev-recap` after `dev-walkthrough` as the final phase of the completed dev-orchestrate cycle.
-
-- Use it to create a handoff-quality summary note for the current session.
-- This is always the last phase of a completed dev-orchestrate cycle.
-- Expect exactly one main recap note under `$PWD/docs/recaps/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md` for the cycle; if `dev-recap` is rerun for the same cycle, it should update that artifact rather than create a second recap note.
-
-## Standard Orchestration Sequence
-
-1. Normalize the input, inspect the workspace when needed, and determine whether this is a new run, a resume, or a manual interrupt.
-2. Resolve `execution_mode` and dispatch the next phase accordingly:
-   - use a subagent when the resolved mode for that phase is `subagents`
-   - otherwise run the phase locally in the main thread
-3. Inspect the returned artifact path or summary, not the entire task from scratch.
-4. Decide the next phase:
-   - continue
-   - skip an optional phase
-   - retry once with tighter instructions
-   - stop on a real blocker
-5. If the run is a fresh or in-progress main cycle, continue through implementation, `dev-review`, `dev-walkthrough`, and `dev-recap` in the normal order.
-6. If the run is in follow-up mode and code, tests, or runtime configuration changed, run `dev-review` against the follow-up diff.
-7. If that follow-up review finds blocking issues, run a narrow implementation pass and rerun `dev-review` only when the follow-up fix changed in-scope code, tests, or runtime configuration.
-8. Once the follow-up implementation state is stable, run `dev-followup` to synchronize the active ExecPlan and any justified downstream artifacts.
-9. In follow-up mode, rerun `dev-walkthrough` only when the reading path materially changed or the user asked for it.
-10. In follow-up mode, rerun `dev-recap` only when current status, unresolved risk, or handoff context materially changed.
-11. In the main cycle, run `dev-walkthrough` exactly once on the final post-loop implementation state.
-12. In the main cycle, run `dev-recap` exactly once after `dev-walkthrough`.
-13. Return a concise summary with:
-   - completed phases
-   - skipped phases
-   - created or updated artifacts
-   - major findings, blockers, and next actions
-
-## Retry And Failure Rules
-
-- If a phase fails because the prompt was too broad, rerun once with tighter scope.
-- If a phase fails because a required artifact is missing, inspect the workspace, recover the latest relevant artifact if possible, and continue.
-- If the workspace shows strong evidence of a partially completed cycle, prefer resuming from that evidence over restarting earlier phases.
-- If a subagent-dispatched phase fails for execution-mechanism reasons rather than task reasons, rerun that phase locally with the same scope before giving up.
-- If a phase is blocked by a real ambiguity that the AI assistant cannot responsibly infer, stop and ask the user one concise question.
-- Do not silently skip `dev-investigate`, `dev-plan`, or implementation review.
+Choose exactly one primary state source for the run using this order:
+
+1. explicit user override such as `resume from review`
+2. explicit artifact path from the user
+3. active ExecPlan when the task is clearly part of an existing extended workstream
+4. active execution brief
+5. dirty working tree plus latest relevant review artifact
+6. free-form request
+
+If the repository is dirty:
+
+- preserve user changes
+- infer the furthest defensible completed gate
+- resume from the next missing gate instead of restarting from scratch
+
+Useful defaults:
+
+- code changed and no review after it: resume at the review gate
+- code changed and review found blockers: run a narrow fix pass, then rerun review
+- only docs or execution brief changed: resume at the next needed planning or close step
+- existing execution brief plus narrow same-task changes: continue with the same execution brief as the primary checkpoint
+- existing ExecPlan plus narrow same-workstream changes: use follow-up mode
+
+## Evidence Discipline
+
+Prevent repeated broad rereads unless they are justified.
+
+### Focused Recon
+
+Start narrow.
+Read the smallest set of files that can establish:
+
+- the likely entry point
+- the likely owning module
+- the relevant tests or validation command
+- the main uncertainty that could still change the fix
+
+Prefer a few anchor files over whole-directory exploration.
+
+### Evidence Index
+
+While reading, keep an `evidence index` in the execution brief or in working notes:
+
+- files already inspected
+- facts already established
+- unresolved questions
+- next candidate files
+
+### Reread Policy
+
+Do not reread code just because a new phase started.
+Reread only when one of these is true:
+
+- the agent is about to edit that file
+- review findings point back to that area
+- validation failure invalidates the current hypothesis
+- a newly discovered dependency makes the earlier read incomplete
+
+## Standard Workflow
+
+### 1. Intake
+
+Normalize the request into:
+
+- goal
+- acceptance criteria
+- constraints
+- likely scope
+- risk level
+
+Classify the task as `fast`, `standard`, or `extended`.
+
+### 2. Focused Recon
+
+Inspect the narrowest useful repository surface first.
+
+- use `rg` to find concrete anchors
+- inspect nearby callers, implementations, and tests only as needed
+- stop broad exploration once the next edit set is clear enough
+
+If focused recon still leaves multiple plausible explanations or the failure surface remains unclear, escalate to `dev-investigate`.
+
+### 3. Compact Planning
+
+For `standard` work, create or refresh one compact execution brief.
+Do not create an ExecPlan unless the task is truly `extended`.
+
+The execution brief must be actionable enough that the agent can resume after interruption without rediscovering the whole task.
+
+### 4. Implement
+
+Implement the planned changes directly.
+Keep the edit scope tight.
+Update the execution brief only when reality changed:
+
+- a decision changed
+- the scope changed
+- new evidence matters for resuming
+- the validation plan changed
+
+Do not regenerate the whole plan after each edit batch.
+
+### 5. Review Gate
+
+After repository-changing implementation work, run a review gate.
+Use `dev-review` or an equivalent local review mindset against the actual changed scope.
+
+Rules:
+
+- review the implementation diff, not the whole repository
+- treat blocking correctness, safety, regression, and data-loss findings as mandatory fix triggers
+- if findings are non-blocking, record the risk and continue unless the user asked for more
+
+If blocking findings exist, enter a narrow fix loop:
+
+1. extract the concrete blockers
+2. fix only those blockers and directly adjacent issues
+3. rerun review only if the fix changed in-scope code, tests, or runtime configuration
+
+### 6. Validation Gate
+
+Run the smallest commands that can prove the change safely.
+
+Prefer this order:
+
+1. targeted tests
+2. nearest relevant test suite
+3. lint or typecheck only when it covers the changed surface
+4. broader integration or app-level checks only when needed
+
+Record only commands actually run and the concise observed result.
+
+### 7. Close
+
+Return a concise summary that states:
+
+- what changed
+- what was validated
+- what remains risky or unverified
+- which artifact, if any, should be used to resume later
+
+### 8. ADR Check
+
+Before closing, ask whether the final accepted design introduced or changed an architecture-level decision.
+
+- if no, do nothing
+- if yes, create or update the relevant ADR and link it from the active execution brief or ExecPlan
+
+## Execution Brief Follow-up
+
+When the active source of truth is an execution brief, handle follow-up work by continuing the same lightweight loop.
+
+Do not invoke `dev-followup` for execution-brief work.
+That skill exists for ExecPlan-led extended workstreams.
+
+In execution-brief follow-up:
+
+1. reuse the existing execution brief as the primary checkpoint
+2. inspect the current diff and latest relevant review artifact
+3. infer the next missing gate instead of restarting from intake
+4. continue with the narrowest needed step:
+   - review gate when code changed and no later review exists
+   - narrow fix pass when the latest review found blockers still relevant to the current diff
+   - validation gate when implementation is done and review is settled
+   - close when only the brief or summary state needs refreshing
+5. update only the execution-brief sections that changed:
+   - `Evidence Index`
+   - `Planned Edits`
+   - `Decisions`
+   - `Validation Plan`
+   - `Current Status`
+   - `Open Risks`
+6. if the follow-up materially changed an existing architecture-level decision, update the relevant ADR or create a superseding ADR
+
+Treat execution-brief follow-up as checkpoint refresh plus gate resumption, not as a new planning cycle.
+
+## Escalation Rules For Heavy Skills
+
+Use the heavier downstream skills only when they reduce real failure risk.
+
+### Use `dev-investigate` when
+
+- focused recon still leaves multiple credible root causes
+- the task depends on deeper repository archaeology
+- external facts or unstable upstream behavior matter
+
+### Use `dev-spec` when
+
+- user-visible requirements need to be fixed before coding
+- the task changes an API, CLI, schema, workflow, or contract
+- multiple valid implementations exist and the boundary needs to be frozen first
+
+### Use `dev-plan` when
+
+- the task is clearly multi-milestone
+- restartability matters more than raw speed
+- a compact execution brief would be too weak for safe continuation
+
+When an ExecPlan becomes the active source of truth, stop maintaining a parallel execution brief.
+
+### Use `dev-followup` when
+
+- there is an existing active ExecPlan
+- the current request is a narrow same-workstream continuation
+- the plan and adjacent docs would drift without synchronization
+
+### Use `dev-walkthrough` when
+
+- the user asks for a reading path
+- the final change is large enough that a guided reading path materially helps
+
+### Use `dev-recap` when
+
+- the user wants a handoff or session summary
+- the run created enough context that a saved recap is worth the extra tokens
+
+Do not make `dev-walkthrough` or `dev-recap` mandatory completion steps.
+
+## ExecPlan Follow-up Mode
+
+Use follow-up mode only for narrow extensions to an existing extended workstream.
+
+In ExecPlan follow-up mode:
+
+1. keep the existing ExecPlan as the primary source of truth
+2. perform the narrow implementation, review, and validation loop
+3. run `dev-followup` if the plan or downstream artifacts would otherwise become stale
+4. update or supersede ADRs when the follow-up changed a previously accepted architecture decision
+
+Do not reopen a completed workstream in ExecPlan follow-up mode when the new request is effectively a new project.
+
+## Subagent Rules
+
+Default to not using subagents for the main implementation loop.
+
+If subagents are used:
+
+- delegate only bounded, non-overlapping tasks
+- prefer sidecar investigation or verification over main-path delegation
+- do not use `fork_context=true` unless the sidecar task really needs the full thread history
+- pass only the minimum task-local context, relevant paths, and expected output
+
+The main thread remains responsible for:
+
+- choosing the task class
+- choosing whether to escalate
+- deciding when enough recon has happened
+- integrating sidecar results
+- running or approving the final implementation, review, and validation gates
 
 ## Guardrails
 
-- Do not jump straight into implementation from a free-form request; `dev-investigate` is the default first step.
-- Do not restart from `dev-investigate` when stronger workspace evidence shows the cycle already progressed further.
-- Do not force `dev-resolve` or `dev-spec` when they add ceremony without improving decisions.
-- Do not run multiple implementation-capable subagents against overlapping write scopes at the same time.
-- Do not change the workflow order, artifact contract, or review rigor based only on `execution_mode`.
-- Do not treat a dev-plan-created plan as executed until the second `dev-plan` run finishes.
-- Do not end the workflow after implementation without running `dev-review`.
-- Do not run `dev-walkthrough` before the review and implementation loop is complete.
-- Do not finish a completed dev-orchestrate cycle without running `dev-walkthrough` and then `dev-recap`.
-- Do not run `dev-walkthrough` or `dev-recap` more than once in a single completed dev-orchestrate cycle.
-- Do not ignore a blocking review finding that the AI assistant can safely fix in the current workflow.
-- Do not rerun `dev-review` after a clean review or after a no-op fix pass.
-- Do not lose the artifact chain; always know which note, spec, and plan the current phase is based on.
-- Do not start a brand-new orchestration cycle for a narrow same-workstream follow-up unless the user clearly wants that reset.
-- Do not rerun `dev-walkthrough` or `dev-recap` automatically for every follow-up; let `dev-followup` propagation rules decide.
-- Do not treat a follow-up walkthrough or recap refresh as a second full completion pass for the original cycle; treat it as a targeted same-workstream update.
+- Do not force `dev-investigate` or `dev-plan` for every task.
+- Do not create a long artifact chain when a compact memo is enough.
+- Do not treat a new phase as a reason to reread the whole same code path.
+- Do not run `dev-walkthrough` or `dev-recap` by default.
+- Do not skip the review gate after repository-changing implementation work.
+- Do not skip validation when a realistic command exists.
+- Do not lose track of the current source of truth.
+- Do not preserve stale memo or plan statements that contradict the current implementation.
+- Do not create ADRs for task-local decisions that belong only in the execution brief or ExecPlan.
 
 ## Quality Bar
 
-- The workflow should feel like a well-orchestrated pipeline, not a loose checklist.
-- Resume and interrupt decisions should be conservative, artifact-aware, and biased toward preserving already completed work.
-- Follow-up mode should feel lighter than a full new cycle while still preserving review rigor and plan fidelity.
-- Each downstream phase should consume concrete upstream artifacts whenever possible.
-- Optional phases should be skipped deliberately, not forgotten.
-- The final summary should let the user see what happened, what was created, and what still needs attention.
+- The workflow should feel fast on small tasks and disciplined on risky tasks.
+- The default path should minimize rereads, repeated artifact churn, and broad context fan-out.
+- Heavy phases should be deliberate escalations, not rituals.
+- Another engineer should be able to resume from the active execution brief or ExecPlan without redoing the original recon.

@@ -1,11 +1,27 @@
 ---
 name: dev-spec
-description: Draft a clear specification from an investigation report, or from a free-form request plus supporting context, and save it under $PWD/docs/specs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md.
+description: Draft a clear specification from an investigation report, or from a free-form request plus supporting context, and save it under $PWD/docs/specs/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Use when requirements, contracts, or scope boundaries need to be fixed before implementation, especially for extended or risky workstreams. Do not treat this as a mandatory phase for every ordinary small or medium task.
 ---
 
 # Specification Drafter
 
 Create a decision-ready markdown specification for a user-provided feature, product change, or technical change and save it to `$PWD/docs/specs/`.
+
+## Escalation Role
+
+`dev-spec` is an escalation tool for situations where the requirement boundary needs to be stabilized before coding.
+It is not the default planning step for every task.
+
+Use it when one or more of these are true:
+
+- the work changes an API, CLI, schema, workflow, or other contract
+- the task has meaningful user-visible behavior changes that should be frozen before implementation
+- multiple plausible implementations exist and the scope boundary needs to be made explicit
+- the workstream is extended or risky enough that a saved specification will reduce drift
+- the user explicitly asks for a specification artifact
+
+If the task is already well-scoped and can be handled safely through a compact execution brief or direct implementation, prefer the lighter path instead.
+If this skill is explicitly invoked, proceed even when a lighter path might have been sufficient.
 
 ## Inputs
 

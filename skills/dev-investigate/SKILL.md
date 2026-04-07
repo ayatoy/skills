@@ -1,11 +1,26 @@
 ---
 name: dev-investigate
-description: Investigate a given topic deeply in the current repository and produce a detailed research report saved at $PWD/docs/investigations/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Use when the user asks for a deep dive, technical investigation, comparative analysis, root-cause research, or background study and expects a persisted markdown note.
+description: Investigate a given topic deeply in the current repository and produce a detailed research report saved at $PWD/docs/investigations/yyyy-MM-dd'T'HH-mm-ss'Z'_*.md. Use when the user asks for a deep dive, technical investigation, comparative analysis, root-cause research, or background study and expects a persisted markdown note, or when a lighter repository recon is not enough and an extended or high-risk workstream needs a dedicated investigation artifact. Do not treat this as the default first step for every ordinary implementation task.
 ---
 
 # Topic Investigation Reporter
 
 Create a detailed markdown research report for a user-provided topic and save it to `$PWD/docs/investigations/`.
+
+## Escalation Role
+
+`dev-investigate` is the heavyweight investigation path.
+It is not the default starting point for every implementation request.
+
+Use it when one or more of these are true:
+
+- focused recon still leaves multiple plausible root causes
+- the workstream is broad or risky enough that a saved investigation artifact will reduce failure risk
+- architecture, dependency, or repository archaeology questions remain unresolved
+- the user explicitly asks for a deep investigation artifact
+
+If a compact execution brief plus direct implementation would be enough, prefer the lighter path instead.
+If this skill is explicitly invoked, proceed even when a lighter path might have been sufficient.
 
 ## Inputs
 

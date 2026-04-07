@@ -4,24 +4,24 @@ Reusable agent skills for software development workflows.
 
 ## Overview
 
-This repository contains focused agent skills for engineering work such as investigation, specification, planning, review, and recap. Each skill can be used on its own, or composed into a larger end-to-end workflow for repository-driven development.
+This repository contains focused agent skills for engineering work such as investigation, specification, planning, review, recap, and architecture decision capture. Each skill can be used on its own, or composed into a larger end-to-end workflow for repository-driven development.
 
 - `dev-investigate`: repository research and technical analysis
 - `dev-resolve`: best-effort inferred answers for open questions in documents and free-form text
-- `dev-plan`: creation and management of ExecPlans
+- `dev-plan`: heavyweight creation and management of ExecPlans for extended workstreams
 - `dev-walkthrough`: prioritized human reading paths for code and changes
 - `dev-review`: two-pass review of changes or existing code
-- `dev-spec`: software requirements and specification drafting
+- `dev-spec`: specification drafting for work that needs a fixed requirement boundary before implementation
 - `dev-followup`: sync an existing ExecPlan-led workstream after narrow follow-up changes
 - `dev-recap`: detailed session recap and repeated work pattern analysis
 - `dev-brainstorm`: free-form ideation backed by a living inbox note under `docs/inbox`
-- `dev-orchestrate`: orchestration across the full workflow from investigation through recap, including resume, interrupt handling, and reopened follow-up mode from existing workspace state
+- `dev-orchestrate`: local-first orchestration across a lightweight execution-brief workflow, with escalation to heavier skills only when needed
 
-Each skill lives under `skills/` in its own directory and includes a `SKILL.md`, agent config, and supporting references. Use `dev-orchestrate` when you want the full workflow, or call individual skills directly when you need one focused operation. See `Skill Relationships` for the orchestration model and `Skills` for per-skill details.
+Each skill lives under `skills/` in its own directory and includes a `SKILL.md`, agent config, and supporting references. Use `dev-orchestrate` when you want the local-first autonomous implementation loop, or call individual skills directly when you need one focused operation. See `Skill Relationships` for the orchestration model and `Skills` for per-skill details.
 
 ## Skill Relationships
 
-The repository is designed around an orchestrated end-to-end workflow, while still allowing each skill to be used independently. You can use `dev-orchestrate` to orchestrate the full flow, or invoke individual skills directly when you only need a specific step. The diagram below shows how skills and their main artifacts connect.
+The repository is designed around a lightweight default workflow with deliberate escalation to heavier artifacts only when risk, ambiguity, or restartability justify them. You can use `dev-orchestrate` to run the local-first loop, or invoke individual skills directly when you only need a specific step. The diagram below shows how skills and their main artifacts connect.
 
 ```mermaid
 %%{init: {'flowchart': {'nodeSpacing': 24, 'rankSpacing': 14}}}%%
@@ -33,37 +33,41 @@ flowchart TB
             direction TB
 
             A["User Request or Issue"] -. optional .-> R("dev-brainstorm") --> T[["docs/inbox/...<br/>brainstorm brief"]]
-            A["User Request or Issue"] --> B("dev-investigate") --> C[["docs/investigations/...<br/>investigation note"]]
+            A["User Request or Issue"] --> B("focused recon") --> C[["docs/execution-briefs/...<br/>execution brief"]]
             T -. optional input .-> B
 
-            C -.-> D("dev-resolve<br/>(optional)")
-            D -. update .-> C
-
-            C -.-> E("dev-spec<br/>(optional)")
-            E --> G[["docs/specs/...<br/>specification"]] --> F("dev-plan")
-
-            C --> F
-            F --> H[["docs/plans/...<br/>ExecPlan"]] --> I("dev-plan execution<br/>(implementation)") --> J[["repository changes"]]
-
+            C --> I("implementation") --> J[["repository changes"]]
             J --> K("dev-review") --> M[["docs/reviews/...<br/>review note series"]] --> X{"blocking<br/>findings?"}
-            X -- no --> L("dev-walkthrough") --> N[["docs/walkthroughs/...<br/>reading path note"]]
             X -- yes --> Y("fix implementation") --> J
+            X -- no --> V("validation") --> Z{"architecture-level<br/>decision?"}
+            Z -- yes --> AA[["docs/adr/...<br/>ADR"]]
+
+            C -. escalation .-> B2("dev-investigate")
+            B2 --> C2[["docs/investigations/...<br/>investigation note"]]
+            C2 -. optional .-> D("dev-resolve")
+            D -. update .-> C2
+            C2 -. optional .-> E("dev-spec")
+            E --> G[["docs/specs/...<br/>specification"]]
+            C2 -. extended .-> F("dev-plan")
+            G -. extended .-> F
+            F --> H[["docs/plans/...<br/>ExecPlan"]] --> I2("dev-plan execution<br/>(implementation)") --> J
+            H -. narrow follow-up .-> F2("dev-followup")
         end
-        Q --> O("dev-recap") --> P[["docs/recaps/...<br/>session recap"]]
+        Q -. optional .-> L("dev-walkthrough") --> N[["docs/walkthroughs/...<br/>reading path note"]]
+        N -. optional .-> O("dev-recap") --> P[["docs/recaps/...<br/>session recap"]]
     end
 ```
 
-- The usual flow is `dev-investigate` first, optional refinement through `dev-resolve` or `dev-spec`, then planning and execution through `dev-plan`.
-- `dev-review` runs first after implementation; if that review is clean, the workflow proceeds directly to `dev-walkthrough`.
+- The default flow is lightweight: focused recon, compact `execution brief`, implementation, review, validation, and close.
+- `dev-investigate`, `dev-spec`, and `dev-plan` are escalation steps for extended or risky work, not mandatory first steps for every task.
+- `dev-review` remains the required post-implementation gate for repository-changing work.
 - The workflow only loops through implementation and review again when `dev-review` found blocking issues and the fix pass actually changed code, tests, or runtime configuration in scope.
-- In one completed `dev-orchestrate` cycle, `dev-walkthrough` and `dev-recap` are the final two phases, in that order, and each produces exactly one main artifact for that cycle.
-- After a cycle is complete, later narrow same-workstream changes can reopen the existing workstream in follow-up mode instead of forcing a brand-new cycle from `dev-investigate`.
-- In follow-up mode, `dev-orchestrate` keeps the existing ExecPlan as the primary artifact, runs any needed narrow review or fix loop, then uses `dev-followup` to sync the plan and only the downstream docs justified by propagation rules.
-- `dev-orchestrate` orchestrates the end-to-end flow, while each skill remains independently callable when you only need one step.
-- `dev-orchestrate` supports `execution_mode=auto|local|subagents`, so the same orchestration can run either with phase subagents or entirely in the main thread.
-- When a prior run stopped halfway or the repository already contains manual edits, `dev-orchestrate` should infer the furthest defensible completed phase from artifacts and current changes, then resume from there instead of restarting blindly.
-- Artifacts are primarily emitted under `docs/investigations/...`, `docs/reviews/...`, `docs/walkthroughs/...`, `docs/recaps/...`, `docs/specs/...`, and `docs/plans/...`.
-- `dev-recap` closes the workflow by summarizing the session, the work performed, and the artifacts produced.
+- `dev-followup` is only for narrow follow-up work on an existing ExecPlan-led workstream.
+- Architecture-level decisions can be promoted into ADRs under `docs/adr/...`, while task-local decisions stay in the `execution brief` or ExecPlan.
+- `dev-walkthrough` and `dev-recap` are optional downstream artifacts, not mandatory completion steps for every run.
+- `dev-orchestrate` supports `execution_mode=auto|local|subagents`, but the default intent is local-first orchestration with subagents used selectively.
+- When a prior run stopped halfway or the repository already contains manual edits, `dev-orchestrate` should infer the furthest defensible completed gate from artifacts and current changes, then resume from there instead of restarting blindly.
+- Artifacts can be emitted under `docs/execution-briefs/...`, `docs/investigations/...`, `docs/specs/...`, `docs/plans/...`, `docs/reviews/...`, `docs/adr/...`, `docs/walkthroughs/...`, and `docs/recaps/...`.
 
 ## Installation
 
@@ -101,8 +105,8 @@ The uninstall script removes only the skill directories represented by this repo
 
 `dev-investigate` is focused on repository investigation and analysis.
 
-- Use cases: technical research, deep dives, root-cause analysis, background study
-- Role: turns findings into structured investigation reports
+- Use cases: technical research, deep dives, root-cause analysis, background study, or escalation when focused recon is not enough
+- Role: turns findings into structured investigation reports for extended or higher-risk work
 
 ### dev-resolve
 
@@ -115,8 +119,8 @@ The uninstall script removes only the skill directories represented by this repo
 
 `dev-plan` supports the creation and management of ExecPlans.
 
-- Use cases: complex features, significant refactors, execution planning, plan execution from an existing ExecPlan
-- Role: accepts free-form requests, upstream research/specification documents, or an existing ExecPlan, then creates, updates, or executes the target plan without jumping straight into implementation
+- Use cases: complex features, significant refactors, migrations, contract changes, execution planning, plan execution from an existing ExecPlan
+- Role: serves as the heavyweight planning path for extended workstreams, accepts free-form requests, upstream research/specification documents, or an existing ExecPlan, then creates, updates, or executes the target plan without jumping straight into implementation
 - Execution model: `Execute the plan` is the only trigger phrase and targets the latest plan implicitly; providing a dev-plan-generated plan file targets that specific plan explicitly
 - References:
   - [OpenAI Cookbook](https://cookbook.openai.com/articles/codex_exec_plans)
@@ -143,15 +147,15 @@ The uninstall script removes only the skill directories represented by this repo
 
 `dev-spec` supports software requirements definition and specification drafting.
 
-- Use cases: requirement definition, spec drafting, assumption and constraint management
-- Role: converts requests or research into implementation-ready specifications
+- Use cases: requirement definition, spec drafting, assumption and constraint management when the requirement boundary needs to be fixed before implementation
+- Role: converts requests or research into implementation-ready specifications for work that benefits from an explicit saved spec
 
 ### dev-followup
 
 `dev-followup` is focused on keeping an existing ExecPlan-led workstream aligned after narrow post-implementation changes.
 
-- Use cases: follow-up fixes, refinements, small behavior tweaks, UI adjustments, and doc synchronization for an already planned or already implemented feature
-- Role: updates exactly one primary ExecPlan in place, refreshes its living sections to match the current implementation and validations, records only commands that were actually run, and updates spec, walkthrough, or recap artifacts only when propagation rules justify it
+- Use cases: follow-up fixes, refinements, small behavior tweaks, UI adjustments, and doc synchronization for an already planned or already implemented extended feature
+- Role: updates exactly one primary ExecPlan in place, refreshes its living sections to match the current implementation and validations, records only commands that were actually run, and updates spec, walkthrough, or recap artifacts only when propagation rules justify it; lightweight execution-brief follow-up stays in `dev-orchestrate`
 
 ### dev-recap
 
@@ -171,8 +175,8 @@ The uninstall script removes only the skill directories represented by this repo
 
 `dev-orchestrate` is focused on orchestrating the full multi-skill workflow.
 
-- Use cases: end-to-end work that should start with investigation, continue through planning and implementation, then end with review, reading guidance, and session recap; recovery of interrupted runs or manual in-flight work; reopening a completed workstream when later narrow follow-up changes arrive
-- Role: keeps the main thread as dev-orchestrate, resolves `execution_mode=auto|local|subagents` from exact tokens or clear natural language, documents canonical execution-mode intents in English while still interpreting equivalent phrasing in the user's language semantically, asks one short clarification question when execution-style wording is ambiguous, dispatches each phase through a subagent or locally without changing the workflow contract, preserves the artifact chain across notes, specs, plans, reviews, and recap, infers the current phase or follow-up state from artifacts and repository changes when resuming, loops through review and fix passes until blocking issues are resolved before running `dev-walkthrough`, guarantees exactly one `dev-walkthrough` artifact and one `dev-recap` artifact at the end of each completed cycle, and uses `dev-followup` to synchronize the active plan when a completed workstream is reopened in follow-up mode
+- Use cases: local-first autonomous implementation work, recovery of interrupted runs or manual in-flight work, escalation to heavyweight investigation/spec/plan phases when risk or ambiguity justifies them, and reopening an ExecPlan-led workstream when later narrow follow-up changes arrive
+- Role: keeps the main thread as `dev-orchestrate`, resolves `execution_mode=auto|local|subagents`, defaults to a lightweight flow built around `docs/execution-briefs/...`, escalates to `dev-investigate`, `dev-spec`, or `dev-plan` only when needed, preserves the current source of truth while resuming, loops through review and fix passes until blocking issues are resolved, promotes architecture-level decisions into ADRs under `docs/adr/...` when appropriate, and uses `dev-followup` only for ExecPlan-led follow-up work
 
 ## License
 
